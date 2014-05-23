@@ -96,7 +96,7 @@ sub internal {
 # Returns: Newly-constructed exception
 sub propagate {
     my ($class, $exception) = @_;
-    $exception =~ s{ [ ] at [ ] \S+ [ ] line [ ] \d+\.? \n+ \z }{}xms;
+    $exception =~ s{ [ ] at [ ] \S+ [ ] line [ ] \d+[.]? \n+ \z }{}xms;
     return $class->internal($exception);
 }
 
@@ -175,7 +175,7 @@ __END__
 
 =for stopwords
 LWP libwww perl JSON CPAN API APIs stringification malformated unparsable
-cmp sublicense MERCHANTABILITY NONINFRINGEMENT
+cmp sublicense MERCHANTABILITY NONINFRINGEMENT Allbery multifactor
 
 =head1 NAME
 

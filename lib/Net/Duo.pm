@@ -49,7 +49,7 @@ sub new {
     # Load integration information from key_file if set.
     my $keys;
     if ($args_ref->{key_file}) {
-        my $json = JSON->new()->relaxed(1);
+        my $json     = JSON->new()->relaxed(1);
         my $key_data = slurp($args_ref->{key_file});
         $keys = eval { $json->decode($key_data) };
         if ($@) {
@@ -250,7 +250,8 @@ __END__
 
 =for stopwords
 API LWP libwww perl JSON CPAN auth APIs namespace prepended ARGS hostname
-username Auth AUTH sublicense MERCHANTABILITY NONINFRINGEMENT
+username Auth AUTH sublicense MERCHANTABILITY NONINFRINGEMENT Allbery
+multifactor
 
 =head1 NAME
 
