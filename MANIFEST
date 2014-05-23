@@ -1,0 +1,6 @@
+.gitignore
+Build.PL
+lib/Net/Duo.pm
+lib/Net/Duo/Exception.pm
+MANIFEST			This list of files
+MANIFEST.SKIP
