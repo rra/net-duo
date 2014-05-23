@@ -2,10 +2,13 @@
 #
 # This Perl module collection provides a Perl interface to the Duo multifactor
 # authentication service (https://www.duosecurity.com/).  It differs from the
-# Perl API sample code in that it wraps all the returned data structures in
-# objects with method calls, abstracts some of the API details, and throws
+# Perl API sample code in that it abstracts some of the API details and throws
 # rich exceptions rather than requiring the caller deal with JSON data
 # structures directly.
+#
+# This module is intended primarily for use as a base class for more
+# specialized Perl modules implementing the specific Duo APIs, but it can also
+# be used directly to make generic API calls.
 
 package Net::Duo 1.00;
 
@@ -229,22 +232,6 @@ sub call_json {
     return $data->{response};
 }
 
-##############################################################################
-# Auth API methods
-##############################################################################
-
-# Confirm that authentication works properly.
-#
-# Returns: Server time in seconds since UNIX epoch
-#  Throws: Net::Duo::Exception on failure
-sub check {
-    my ($self) = @_;
-
-    # Make the Duo call and get the decoded result.
-    my $result = $self->call_json('GET', '/auth/v2/check');
-    return $result->{time};
-}
-
 1;
 __END__
 
@@ -260,7 +247,7 @@ Net::Duo - API for Duo multifactor authentication service
 =head1 SYNOPSIS
 
     my $duo = Net::Duo->new({ key_file => '/path/to/keys.json' });
-    $duo->check();
+    my $reply = $duo->call_json('GET', '/auth/v2/check');
 
 =head1 REQUIREMENTS
 
@@ -269,21 +256,11 @@ and Perl6::Slurp, all of which are available from CPAN.
 
 =head1 DESCRIPTION
 
-Net::Duo provides an object-oriented Perl interface for the Duo API.  Its
-goal is to provide a native, natural interface for all Duo operations in
-the auth, verify, and admin APIs from inside Perl, while abstracting away
-as many details of the API as can be reasonably handled automatically.
-
-Currently, only a tiny number of available methods are implemented.
-
-For calls that return complex data structures, the return from the call
-will generally be an object in the Net::Duo namespace.  These objects all
-have methods matching the name of the field in the Duo API documentation
-that returns that field value.  Where it makes sense, there will also be
-a method with the same name but with C<set_> prepended that changes that
-value.  No changes are made to the Duo record itself until the commit()
-method is called on the object, which will make the underlying Duo API
-call to update the data.
+Net::Duo provides an object-oriented Perl interface for generic calls to
+one of the the Duo Security REST APIs.This module is intended primarily
+for use as a base class for more specialized Perl modules implementing the
+specific Duo APIs, but it can also be used directly to make generic API
+calls.
 
 On failure, all methods throw a Net::Duo::Exception object.  This can be
 interpolated into a string for a simple error message, or inspected with
@@ -358,7 +335,7 @@ for unit testing.
 
 =back
 
-=head1 GENERAL API INSTANCE METHODS
+=head1 INSTANCE METHODS
 
 =over 4
 
@@ -377,19 +354,6 @@ Duo and throwing a Net::Duo::Exception object on call failure.
 
 This method cannot be used with the small handful of API calls that do not
 return JSON, such as the Auth API C</logo> endpoint.
-
-=back
-
-=head1 AUTH API INSTANCE METHODS
-
-=over 4
-
-=item check()
-
-Calls the check authentication API endpoint.  This can be used as a simple
-check that all of the integration arguments are correct and the client can
-authenticate to the Duo authentication API.  On success, it returns the
-current time on the Duo server in seconds since UNIX epoch.
 
 =back
 
