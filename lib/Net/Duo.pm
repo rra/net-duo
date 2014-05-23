@@ -10,6 +10,7 @@
 package Net::Duo 1.00;
 
 use 5.014;
+use strict;
 use warnings;
 
 use Carp qw(croak);

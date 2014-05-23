@@ -11,6 +11,7 @@
 package Net::Duo::Exception 1.00;
 
 use 5.014;
+use strict;
 use warnings;
 
 # Enable this object to be treated like a string scalar.
