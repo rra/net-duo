@@ -126,8 +126,8 @@ sub protocol {
 
 # Basic accessors.
 sub code    { my $self = shift; return $self->{code} }
-sub content { my $self = shift; return $self->{code} }
-sub detail  { my $self = shift; return $self->{message} }
+sub content { my $self = shift; return $self->{content} }
+sub detail  { my $self = shift; return $self->{detail} }
 sub message { my $self = shift; return $self->{message} }
 
 # The cmp implmenetation converts the exception to a string and then compares
