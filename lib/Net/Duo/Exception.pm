@@ -25,18 +25,19 @@ use overload '""' => \&to_string, 'cmp' => \&spaceship;
 # does not have a stat key with a value of FAIL, this call will be
 # converted automatically to a call to protocol().
 #
-# $class  - Class of the exception to create
-# $object - The decoded JSON object representing the error reply
+# $class   - Class of the exception to create
+# $object  - The decoded JSON object representing the error reply
+# $content - The undecoded content of the server reply
 #
 # Returns: Newly-constructed exception
 sub api {
-    my ($class, $object) = @_;
+    my ($class, $object, $content) = @_;
 
     # Ensure that we have a valid stat key.
     if (!defined($object->{stat})) {
-        return $class->protocol('missing stat value in JSON reply', $object);
+        return $class->protocol('missing stat value in JSON reply', $content);
     } elsif ($object->{stat} ne 'FAIL') {
-        my $e = $class->protocol('invalid stat value', $object);
+        my $e = $class->protocol('invalid stat value', $content);
         $e->{detail} = $object->{stat};
         return $e;
     }
@@ -46,6 +47,7 @@ sub api {
         code    => $object->{code}    // 50000,
         message => $object->{message} // 'missing error message',
         detail  => $object->{message_detail},
+        content => $content,
     };
 
     # Create the object and return it.
@@ -175,7 +177,7 @@ __END__
 
 =for stopwords
 LWP libwww perl JSON CPAN API APIs stringification malformated unparsable
-cmp sublicense MERCHANTABILITY NONINFRINGEMENT Allbery multifactor
+cmp sublicense MERCHANTABILITY NONINFRINGEMENT Allbery multifactor undecoded
 
 =head1 NAME
 
@@ -229,12 +231,12 @@ object.
 
 =over 4
 
-=item api(OBJECT)
+=item api(OBJECT, CONTENT)
 
 Creates an exception for a Duo API failure.  OBJECT should be the JSON
-object (decoded as a hash) returned by the Duo API call.  This exception
-constructor should be used whenever possible, since it provides the most
-useful information.
+object (decoded as a hash) returned by the Duo API call, and CONTENT
+should be the undecoded text.  This exception constructor should be used
+whenever possible, since it provides the most useful information.
 
 =item http(RESPONSE)
 

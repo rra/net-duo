@@ -218,7 +218,7 @@ sub call_json {
 
     # Check whether the API call succeeded.  If not, throw an exception.
     if (!defined($data->{stat}) || $data->{stat} ne 'OK') {
-        die Net::Duo::Exception->api($data);
+        die Net::Duo::Exception->api($data, $content);
     }
 
     # Return the response portion of the reply.
