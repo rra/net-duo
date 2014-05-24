@@ -1,13 +1,13 @@
-# Perl interface for the Duo Auth API.
+# Perl interface for the Duo Admin API.
 #
-# This Perl module collection provides a Perl interface to the Auth API
+# This Perl module collection provides a Perl interface to the Admin API
 # integration for the Duo multifactor authentication service
 # (https://www.duosecurity.com/).  It differs from the Perl API sample code in
 # that it wraps all the returned data structures in objects with method calls,
 # abstracts some of the API details, and throws rich exceptions rather than
 # requiring the caller deal with JSON data structures directly.
 
-package Net::Duo::Auth 1.00;
+package Net::Duo::Admin 1.00;
 
 use 5.014;
 use strict;
@@ -15,22 +15,37 @@ use warnings;
 
 use parent qw(Net::Duo);
 
+use Net::Duo::Admin::User;
+
 ##############################################################################
-# Auth API methods
+# Admin API methods
 ##############################################################################
 
-# Confirm that authentication works properly.
+# Retrieve a user or users associated with a Duo account.  If the username
+# parameter is given, only that user will be returned.  Otherwise, all users
+# will be returned.  When retrieving a single user, an empty reply indicates
+# no user by that username exists.
 #
-# $self - The Net::Duo::Auth object
+# $self     - The Net::Duo::Admin object
+# $username - Retrieve the record for only this user (optional)
 #
-# Returns: Server time in seconds since UNIX epoch
+# Returns: List of Net::Duo::User objects if no parameter is given
+#          A single Net::Duo::User object if $username is given and found
+#          undef if $username is given and not found
 #  Throws: Net::Duo::Exception on failure
-sub check {
-    my ($self) = @_;
+sub users {
+    my ($self, $username) = @_;
 
     # Make the Duo call and get the decoded result.
-    my $result = $self->call_json('GET', '/auth/v2/check');
-    return $result->{time};
+    my $args = $username ? { username => $username } : undef;
+    my $result = $self->call_json('GET', '/admin/v1/users', $args);
+
+    # Convert the returned users into Net::Duo::Admin::User objects.
+    my @users;
+    for my $user (@{$result}) {
+        push(@users, Net::Duo::Admin::User->new($self, $user));
+    }
+    return @users;
 }
 
 1;
@@ -41,12 +56,12 @@ Allbery Auth MERCHANTABILITY NONINFRINGEMENT sublicense
 
 =head1 NAME
 
-Net::Duo::Auth - Perl interface for the Duo Auth API
+Net::Duo::Admin - Perl interface for the Duo Admin API
 
 =head1 SYNOPSIS
 
-    my $duo = Net::Duo::Auth->new({ key_file => '/path/to/keys.json' });
-    my $timestamp = $duo->check;
+    my $duo = Net::Duo::Admin->new({ key_file => '/path/to/keys.json' });
+    my @users = $duo->users;
 
 =head1 REQUIREMENTS
 
@@ -55,7 +70,7 @@ Perl6::Slurp, and Sub::Install, all of which are available from CPAN.
 
 =head1 DESCRIPTION
 
-Net::Duo::Auth is an implementation of the Duo Auth REST API for Perl.
+Net::Duo::Admin is an implementation of the Duo Admin REST API for Perl.
 Method calls correspond to endpoints in the REST API.  Its goal is to
 provide a native, natural interface for all Duo operations in the API from
 inside Perl, while abstracting away as many details of the API as can be
@@ -64,7 +79,7 @@ reasonably handled automatically.
 Currently, only a tiny number of available methods are implemented.
 
 For calls that return complex data structures, the return from the call
-will generally be an object in the Net::Duo::Auth namespace.  These
+will generally be an object in the Net::Duo::Admin namespace.  These
 objects all have methods matching the name of the field in the Duo API
 documentation that returns that field value.  Where it makes sense, there
 will also be a method with the same name but with C<set_> prepended that

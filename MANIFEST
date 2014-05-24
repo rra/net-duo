@@ -1,8 +1,14 @@
 .gitignore
 Build.PL
 lib/Net/Duo.pm
+lib/Net/Duo/Admin.pm
+lib/Net/Duo/Admin/Group.pm
+lib/Net/Duo/Admin/Phone.pm
+lib/Net/Duo/Admin/Token.pm
+lib/Net/Duo/Admin/User.pm
 lib/Net/Duo/Auth.pm
 lib/Net/Duo/Exception.pm
+lib/Net/Duo/Object.pm
 MANIFEST			This list of files
 MANIFEST.SKIP
 t/data/perl.conf

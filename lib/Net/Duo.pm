@@ -252,7 +252,7 @@ Net::Duo - API for Duo multifactor authentication service
 =head1 REQUIREMENTS
 
 Perl 5.14 or later and the modules LWP (also known as libwww-perl), JSON,
-and Perl6::Slurp, all of which are available from CPAN.
+Perl6::Slurp, and Sub::Install, all of which are available from CPAN.
 
 =head1 DESCRIPTION
 
