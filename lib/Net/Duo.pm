@@ -91,14 +91,13 @@ sub new {
 # $self     - Net::Duo object
 # $args_ref - Reference to hash of arguments (may be undef)
 #
-# Returns: URL-encoded string representing those arguments or empty string
+# Returns: URL-encoded string representing those arguments
+#          undef if there are no arguments
 sub _canonicalize_args {
     my ($self, $args_ref) = @_;
 
-    # Return the empty string if there are no arguments.
-    if (!defined($args_ref)) {
-        return q{};
-    }
+    # Return undef if there are no arguments.
+    return if !defined($args_ref);
 
     # Encode the arguments into a list of key and value pairs.
     my @pairs;
@@ -130,7 +129,7 @@ sub _sign_call {
     my $host   = $self->{api_hostname};
 
     # Generate the request information that should be signed.
-    my $data = join("\n", $date, $method, $host, $path, $args);
+    my $data = join("\n", $date, $method, $host, $path, $args // q{});
 
     # Generate a SHA-1 HMAC as the signature.
     my $signature = hmac_sha1_hex($data, $self->{secret_key});
@@ -188,6 +187,8 @@ sub call_json {
     if ($method eq 'POST' || $method eq 'PUT') {
         $request->content_type('application/x-www-form-urlencoded');
         $request->content($args);
+        $request->uri('https://' . $host . $path);
+    } elsif (!defined($args)) {
         $request->uri('https://' . $host . $path);
     } else {
         $request->uri('https://' . $host . $path . q{?} . $args);
