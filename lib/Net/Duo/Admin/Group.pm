@@ -13,7 +13,8 @@ use parent qw(Net::Duo::Object);
 
 # Data specification for converting JSON into our object representation.  See
 # the Net::Duo::Object documentation for syntax information.
-sub fields {
+## no critic (Subroutines::ProhibitUnusedPrivateSubroutines)
+sub _fields {
     return {
         desc          => 'simple',
         group_id      => 'simple',
@@ -24,6 +25,7 @@ sub fields {
         voice_enabled => 'simple',
     };
 }
+## use critic
 
 # Install our accessors.
 Net::Duo::Admin::Group->install_accessors;
@@ -32,7 +34,7 @@ Net::Duo::Admin::Group->install_accessors;
 __END__
 
 =for stopwords
-Allbery
+Allbery MERCHANTABILITY NONINFRINGEMENT SMS passcodes sublicense
 
 =head1 NAME
 
@@ -40,6 +42,7 @@ Net::Duo::Admin::Group - Representation of a Duo group
 
 =head1 SYNOPSIS
 
+    my $decoded_json = get_json();
     my $group = Net::Duo::Admin::Group->new($decoded_json);
     say $group->desc;
 

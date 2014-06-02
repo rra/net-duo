@@ -35,9 +35,10 @@ sub new {
     my ($class, $duo, $data_ref) = @_;
 
     # Retrieve the field specification for this object.
-    my $fields = $class->fields;
+    my $fields = $class->_fields;
 
     # Make a deep copy of the data following the field specification.
+    ## no critic (ControlStructures::ProhibitCascadingIfElse)
     my $self = { _duo => $duo };
     for my $field (keys %{$fields}) {
         my $type  = $fields->{$field};
@@ -58,6 +59,7 @@ sub new {
             $self->{$field} = \@objects;
         }
     }
+    ## use critic
 
     # Bless and return the new object.
     bless($self, $class);
@@ -78,7 +80,7 @@ sub install_accessors {
     my ($class) = @_;
 
     # Retrieve the field specification for this object.
-    my $fields = $class->fields;
+    my $fields = $class->_fields;
 
     # Create an accessor for each one.
     for my $field (keys %{$fields}) {
@@ -109,7 +111,7 @@ sub install_accessors {
 __END__
 
 =for stopwords
-Allbery undef
+Allbery undef MERCHANTABILITY NONINFRINGEMENT sublicense getters
 
 =head1 NAME
 
@@ -163,10 +165,10 @@ Net::Duo::Object constructor to build the Perl data structure for an
 object, and by the install_accessors() class method to create the
 accessors for the class.
 
-The client class must provide a class method named fields() that returns a
-reference to a hash.  The keys of the hash are the field names of the data
-stored in an object of that class.  The values specify the type of data
-stored in that field and must be chosen from the following:
+The client class must provide a class method named _fields() that returns
+a reference to a hash.  The keys of the hash are the field names of the
+data stored in an object of that class.  The values specify the type of
+data stored in that field and must be chosen from the following:
 
 =over 4
 

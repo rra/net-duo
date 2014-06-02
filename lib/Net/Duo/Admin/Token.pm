@@ -15,7 +15,8 @@ use Net::Duo::Admin::User;
 
 # Data specification for converting JSON into our object representation.  See
 # the Net::Duo::Object documentation for syntax information.
-sub fields {
+## no critic (Subroutines::ProhibitUnusedPrivateSubroutines)
+sub _fields {
     return {
         serial   => 'simple',
         token_id => 'simple',
@@ -23,6 +24,7 @@ sub fields {
         users    => 'Net::Duo::Admin::User',
     };
 }
+## use critic
 
 # Install our accessors.
 Net::Duo::Admin::Token->install_accessors;
@@ -31,7 +33,7 @@ Net::Duo::Admin::Token->install_accessors;
 __END__
 
 =for stopwords
-Allbery
+Allbery MERCHANTABILITY NONINFRINGEMENT sublicense
 
 =head1 NAME
 
@@ -39,6 +41,7 @@ Net::Duo::Admin::Token - Representation of a Duo token
 
 =head1 SYNOPSIS
 
+    my $decoded_json = get_json();
     my $token = Net::Duo::Admin::Token->new($decoded_json);
     say $token->serial;
 

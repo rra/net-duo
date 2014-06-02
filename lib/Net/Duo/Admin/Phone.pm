@@ -15,7 +15,8 @@ use Net::Duo::Admin::User;
 
 # Data specification for converting JSON into our object representation.  See
 # the Net::Duo::Object documentation for syntax information.
-sub fields {
+## no critic (Subroutines::ProhibitUnusedPrivateSubroutines)
+sub _fields {
     return {
         activated          => 'simple',
         capabilities       => 'array',
@@ -30,6 +31,7 @@ sub fields {
         users              => 'Net::Duo::Admin::User',
     };
 }
+## use critic
 
 # Install our accessors.
 Net::Duo::Admin::Phone->install_accessors;
@@ -38,7 +40,7 @@ Net::Duo::Admin::Phone->install_accessors;
 __END__
 
 =for stopwords
-Allbery
+Allbery MERCHANTABILITY NONINFRINGEMENT SMS passcodes sublicense
 
 =head1 NAME
 
@@ -46,6 +48,7 @@ Net::Duo::Admin::Phone - Representation of a Duo phone
 
 =head1 SYNOPSIS
 
+    my $decoded_json = get_json();
     my $phone = Net::Duo::Admin::Phone->new($decoded_json);
     say $phone->number;
 
