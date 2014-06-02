@@ -258,7 +258,7 @@ Perl6::Slurp, and Sub::Install, all of which are available from CPAN.
 =head1 DESCRIPTION
 
 Net::Duo provides an object-oriented Perl interface for generic calls to
-one of the the Duo Security REST APIs.This module is intended primarily
+one of the the Duo Security REST APIs.  This module is intended primarily
 for use as a base class for more specialized Perl modules implementing the
 specific Duo APIs, but it can also be used directly to make generic API
 calls.
