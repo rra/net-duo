@@ -98,7 +98,7 @@ objects in the Net::Duo namespace.
 
 =item new(ARGS)
 
-Create a new Net::Duo::Auth object, which is used for all subsequent
+Create a new Net::Duo::Admin object, which is used for all subsequent
 calls.  This constructor is inherited from Net::Duo.  See L<Net::Duo> for
 documentation of the possible arguments.
 
@@ -108,12 +108,12 @@ documentation of the possible arguments.
 
 =over 4
 
-=item check()
+=item users()
 
-Calls the check endpoint.  This can be used as a simple check that all of
-the integration arguments are correct and the client can authenticate to
-the Duo authentication API.  On success, it returns the current time on
-the Duo server in seconds since UNIX epoch.
+Retrieves all the users currently present in this Duo account and returns
+them as a list of Net::Duo::Admin::User objects.  Be aware that this list
+may be quite long and consume a lot of resources for accounts with many
+users.
 
 =back
 
