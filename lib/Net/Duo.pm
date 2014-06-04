@@ -52,7 +52,7 @@ sub new {
     # Load integration information from key_file if set.
     my $keys;
     if ($args_ref->{key_file}) {
-        my $json     = JSON->new()->relaxed(1);
+        my $json     = JSON->new->relaxed(1);
         my $key_data = slurp($args_ref->{key_file});
         $keys = eval { $json->decode($key_data) };
         if ($@) {
@@ -70,10 +70,10 @@ sub new {
     }
 
     # Create or set the user agent object.
-    $self->{agent} = $args_ref->{user_agent} // LWP::UserAgent->new();
+    $self->{agent} = $args_ref->{user_agent} // LWP::UserAgent->new;
 
     # Create the JSON decoder that we'll use for subsequent operations.
-    $self->{json} = JSON->new()->utf8(1);
+    $self->{json} = JSON->new->utf8(1);
 
     # Bless and return the new object.
     bless($self, $class);
@@ -167,7 +167,7 @@ sub call_json {
     }
 
     # Set up the request.
-    my $request = HTTP::Request->new();
+    my $request = HTTP::Request->new;
     $request->method($method);
     $request->protocol('HTTP/1.1');
     $request->date(time());
@@ -196,11 +196,11 @@ sub call_json {
 
     # Make the request and retrieve the content of the response.
     my $response = $self->{agent}->request($request);
-    my $content  = $response->decoded_content();
+    my $content  = $response->decoded_content;
 
     # If the content was empty, we have a failure of some sort.
     if (!defined($content)) {
-        if ($response->is_success()) {
+        if ($response->is_success) {
             die Net::Duo::Exception->protocol('empty response');
         } else {
             die Net::Duo::Exception->http($response);
@@ -212,7 +212,7 @@ sub call_json {
     # otherwise.
     my $data = eval { $self->{json}->decode($content) };
     if ($@) {
-        if ($response->is_success()) {
+        if ($response->is_success) {
             my $error = 'invalid JSON in reply';
             die Net::Duo::Exception->protocol($error, $content);
         } else {
