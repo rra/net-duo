@@ -15,9 +15,11 @@ use 5.014;
 use strict;
 use warnings;
 
+use Carp qw(croak);
 use Encode qw(decode);
 use HTTP::Request;
 use HTTP::Response;
+use JSON;
 use Perl6::Slurp qw(slurp);
 use Test::More;
 use URI::Escape qw(uri_unescape);
@@ -124,27 +126,60 @@ sub new {
         $self->{$key} = $args_ref->{$key} // $keys->{$key};
     }
 
+    # Create the JSON decoder that we'll use for subsequent operations.
+    $self->{json} = JSON->new->utf8(1);
+
+    # Bless and return the new object.
     bless($self, $class);
     return $self;
 }
 
-# Configure an expected request and the response to return.
+# Configure an expected request and the response to return.  Either response
+# or response_file should be given.  If response_file is given, an
+# HTTP::Response with a status code of 200 and the contents of that file as
+# the body (Content-Type: application/json).
 #
 # $self     - Test::Mock::Duo::Agent object
 # $args_ref - Expected request and response information
-#   method   - Expected method of the request
-#   uri      - Expected partial URI of the request without any query string
-#   content  - Expected query or post data as a hash reference (may be undef)
-#   response - HTTP::Response object to return to the caller
+#   method        - Expected method of the request
+#   uri           - Expected URI of the request without any query string
+#   content       - Expected query or post data as reference (may be undef)
+#   response      - HTTP::Response object to return to the caller
+#   response_file - File containing JSON to return as a respose
 #
 # Returns: undef
+#  Throws: Text exception on invalid parameters
+#          Text exception if response_file is not readable
 sub expect {
     my ($self, $args_ref) = @_;
+
+    # Verify consistency of the arguments.
+    if (!$args_ref->{response} && !defined($args_ref->{response_file})) {
+        croak('no response or response_file specified');
+    }
+    if ($args_ref->{response} && defined($args_ref->{response_file})) {
+        croak('both response and response_file given');
+    }
+
+    # Build the response object if needed.
+    my $response;
+    if ($args_ref->{response}) {
+        $response = $args_ref->{response};
+    } else {
+        $response = HTTP::Response->new(200, 'Success');
+        $response->header('Content-Type', 'application/json');
+        my $contents = slurp($args_ref->{response_file});
+        my $data     = $self->{json}->decode($contents);
+        my $reply    = { stat => 'OK', response => $data };
+        $response->content($self->{json}->encode($reply));
+    }
+
+    # Set the expected information for call verification later.
     $self->{expected} = {
         method   => $args_ref->{method},
         uri      => 'https://' . $self->{api_hostname} . $args_ref->{uri},
         content  => $args_ref->{content},
-        response => $args_ref->{response},
+        response => $response,
     };
     return;
 }
