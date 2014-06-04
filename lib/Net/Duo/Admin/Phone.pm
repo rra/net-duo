@@ -21,6 +21,7 @@ sub _fields {
         activated          => 'simple',
         capabilities       => 'array',
         extension          => 'simple',
+        name               => 'simple',
         number             => 'simple',
         phone_id           => 'simple',
         platform           => 'simple',
@@ -102,7 +103,11 @@ The device can receive batches of SMS passcodes.
 
 =item extension()
 
-The extension for this phone.
+The extension for this phone, if any.
+
+=item name()
+
+The name of this phone.
 
 =item number()
 
