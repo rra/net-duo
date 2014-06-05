@@ -75,7 +75,8 @@ sub is_user {
 
     # Iterate through the groups.
     my @groups = $user->groups;
-    is(scalar(@groups), scalar(@{ $expected->{groups} }), '...group count');
+    my $count = $expected->{groups} ? scalar(@{ $expected->{groups} }) : 0;
+    is(scalar(@groups), $count, '...group count');
     for my $i (0 .. $#groups) {
         my $seen_group     = $groups[$i];
         my $expected_group = $expected->{groups}[$i];
@@ -91,7 +92,8 @@ sub is_user {
 
     # Iterate through the phones.
     my @phones = $user->phones;
-    is(scalar(@phones), scalar(@{ $expected->{phones} }), '...phone count');
+    $count = $expected->{phones} ? scalar(@{ $expected->{phones} }) : 0;
+    is(scalar(@phones), $count, '...phone count');
     for my $i (0 .. $#phones) {
         my $seen_phone     = $phones[$i];
         my $expected_phone = $expected->{phones}[$i];
@@ -114,7 +116,8 @@ sub is_user {
 
     # Iterate through the tokens.
     my @tokens = $user->tokens;
-    is(scalar(@tokens), scalar(@{ $expected->{tokens} }), '...token count');
+    $count = $expected->{tokens} ? scalar(@{ $expected->{tokens} }) : 0;
+    is(scalar(@tokens), $count, '...token count');
     for my $i (0 .. $#tokens) {
         my $seen_token     = $tokens[$i];
         my $expected_token = $expected->{tokens}[$i];
@@ -181,6 +184,30 @@ my $user = $duo->user('jdoe');
 # Verify that the returned user is correct.
 $raw      = slurp('t/data/responses/user.json');
 $expected = $json->decode($raw)->[0];
+is_user($user, $expected);
+
+# Create a new user.
+my $data = {
+    username => 'jdoe',
+    realname => 'Jane Doe',
+    email    => 'jdoe@example.com',
+    status   => 'active',
+    notes    => 'Some user note',
+};
+$mock->expect(
+    {
+        method        => 'POST',
+        uri           => '/admin/v1/users',
+        content       => $data,
+        response_file => 't/data/responses/user-create.json',
+    }
+);
+note('Testing user create endpoint');
+$user = Net::Duo::Admin::User->create($duo, $data);
+
+# Verify that the returned user is correct.  (Just use the same return data.)
+$raw      = slurp('t/data/responses/user-create.json');
+$expected = $json->decode($raw);
 is_user($user, $expected);
 
 # Finished.  Tell Test::More that.

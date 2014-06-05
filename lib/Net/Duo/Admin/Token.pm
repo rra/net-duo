@@ -29,11 +29,25 @@ sub _fields {
 # Install our accessors.
 Net::Duo::Admin::Token->install_accessors;
 
+# Override the create method to add the appropriate URI.
+#
+# $class    - Class of object to create
+# $duo      - Net::Duo object to use to create the object
+# $data_ref - Data for new object as a reference to a hash
+#
+# Returns: Newly-created object
+#  Throws: Net::Duo::Exception on any problem creating the object
+sub create {
+    my ($class, $duo, $data_ref) = @_;
+    return $class->SUPER::create($duo, '/admin/v1/tokens', $data_ref);
+}
+
 1;
 __END__
 
 =for stopwords
-Allbery MERCHANTABILITY NONINFRINGEMENT sublicense
+Allbery MERCHANTABILITY NONINFRINGEMENT sublicense YubiKey HOTP-6 HOTP-8
+HOTP
 
 =head1 NAME
 
@@ -55,6 +69,49 @@ about a token.
 =head1 CLASS METHODS
 
 =over 4
+
+=item create(DUO, DATA)
+
+Creates a new token in Duo and returns the resulting token as a new
+Net::Duo::Admin::Token object.  DUO is the Net::Duo object that should be
+used to perform the creation.  DATA is a reference to a hash with the
+following keys:
+
+=over 4
+
+=item aes_key
+
+The YubiKey AES key.  This parameter is required for YubiKey hardware
+tokens.
+
+=item counter
+
+Initial value for the HOTP counter.  The default is C<0>.  This parameter
+is only valid for HOTP-6 and HOTP-8 hardware tokens.
+
+=item private_id
+
+The YubiKey private ID.  This parameter is required for YubiKey hardware
+tokens.
+
+=item secret
+
+The HOTP secret.  This parameter is required for HOTP-6 and HOTP-8
+hardware tokens.
+
+=item serial
+
+The serial number of the token.  Required.
+
+=item type
+
+The type of hardware token.  For the list of valid values, see the Duo
+Admin API documentation.  Required.
+
+=back
+
+Note that several of these keys can only be set on token creation and
+cannot be retrieved afterwards.
 
 =item new(DUO, DATA)
 

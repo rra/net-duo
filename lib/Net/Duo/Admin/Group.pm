@@ -19,10 +19,10 @@ sub _fields {
         desc          => 'simple',
         group_id      => 'simple',
         name          => 'simple',
-        push_enabled  => 'simple',
-        sms_enabled   => 'simple',
+        push_enabled  => ['simple', 'boolean'],
+        sms_enabled   => ['simple', 'boolean'],
         status        => 'simple',
-        voice_enabled => 'simple',
+        voice_enabled => ['simple', 'boolean'],
     };
 }
 ## use critic
@@ -30,11 +30,24 @@ sub _fields {
 # Install our accessors.
 Net::Duo::Admin::Group->install_accessors;
 
+# Override the create method to add the appropriate URI.
+#
+# $class    - Class of object to create
+# $duo      - Net::Duo object to use to create the object
+# $data_ref - Data for new object as a reference to a hash
+#
+# Returns: Newly-created object
+#  Throws: Net::Duo::Exception on any problem creating the object
+sub create {
+    my ($class, $duo, $data_ref) = @_;
+    return $class->SUPER::create($duo, '/admin/v1/groups', $data_ref);
+}
+
 1;
 __END__
 
 =for stopwords
-Allbery MERCHANTABILITY NONINFRINGEMENT SMS passcodes sublicense
+Allbery MERCHANTABILITY NONINFRINGEMENT SMS passcodes sublicense desc
 
 =head1 NAME
 
@@ -56,6 +69,46 @@ about a group, including the privileges it controls.
 =head1 CLASS METHODS
 
 =over 4
+
+=item create(DUO, DATA)
+
+Creates a new group in Duo and returns the resulting user as a new
+Net::Duo::Admin::Group object.  DUO is the Net::Duo object that should be
+used to perform the creation.  DATA is a reference to a hash with the
+following keys:
+
+=over 4
+
+=item name
+
+The name of the group to create.  Required.
+
+=item desc
+
+The description of the group.  Optional.
+
+=item push_enabled
+
+Whether users in the group will be able to use Duo Push to authenticate.
+See the L</push_enabled()> method below for more information.  Optional.
+
+=item sms_enabled
+
+Whether users in the group will be able to use SMS to authenticate.  See
+the L</sms_enabled()> method below for more information.  Optional.
+
+=item status
+
+The group's authentication status.  See the L</status()> method below for
+the possible values.  Optional.
+
+=item voice_enabled
+
+Whether users in the group will be able to use voice callbacks to
+authenticate.  See the L</voice_enabled()> method below for more
+information.  Optional.
+
+=back
 
 =item new(DUO, DATA)
 

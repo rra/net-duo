@@ -17,9 +17,32 @@ use strict;
 use warnings;
 
 use Carp qw(croak);
+use List::MoreUtils qw(any);
 use Sub::Install;
 
-# Create a new Net::Duo object.  This instructor can be inherited by all
+# Helper function to parse the data for a particular field specification.
+#
+# $spec - The field specification (a value in the hash from _fields)
+#
+# Returns: The type in scalar context
+#          The type and then any flags in array context
+sub _field_type {
+    my ($spec) = @_;
+    my ($type, @flags);
+
+    # If the specification is a reference, it's an array, with the first value
+    # as type and the rest as flags.  Otherwise, it's a simple type.
+    if (ref($spec) eq 'ARRAY') {
+        ($type, @flags) = @{$spec};
+    } else {
+        $type = $spec;
+    }
+
+    # Return the appropriate value or values.
+    return wantarray ? ($type, @flags) : $type;
+}
+
+# Create a new Net::Duo object.  This constructor can be inherited by all
 # object classes.  It takes the decoded JSON and uses the field specification
 # for the object to construct an object via deep copying.
 #
@@ -27,8 +50,8 @@ use Sub::Install;
 # specification.  See the documentation for more details.
 #
 # $class    - Class of object to create
-# $duo      - Net::Duo object to use for further API calls on this user
-# $data_ref - User data as a reference to a hash (usually decoded from JSON)
+# $duo      - Net::Duo object to use for further API calls on this object
+# $data_ref - Object data as a reference to a hash (usually decoded from JSON)
 #
 # Returns: Newly-created object
 sub new {
@@ -40,7 +63,7 @@ sub new {
     # Make a deep copy of the data following the field specification.
     my $self = { _duo => $duo };
     for my $field (keys %{$fields}) {
-        my $type  = $fields->{$field};
+        my $type  = _field_type($fields->{$field});
         my $value = $data_ref->{$field};
         if ($type eq 'simple') {
             $self->{$field} = $value;
@@ -54,6 +77,46 @@ sub new {
             $self->{$field} = \@objects;
         }
     }
+
+    # Bless and return the new object.
+    bless($self, $class);
+    return $self;
+}
+
+# Create a new object in Duo.  This constructor must be overridden by
+# subclasses to pass in the additional URI parameter for the Duo API endpoint.
+# It takes a reference to a hash representing the object values and returns
+# the new object as an appropriately-blessed object.  Currently, no local data
+# checking is performed on the provided data.
+#
+# The child class must provide a static method fields() that returns a field
+# specification.  See the documentation for more details.
+#
+# $class    - Class of object to create
+# $duo      - Net::Duo object to use to create the object
+# $uri      - Duo endpoint to use for creation
+# $data_ref - Data for new object as a reference to a hash
+#
+# Returns: Newly-created object
+#  Throws: Net::Duo::Exception on any problem creating the object
+sub create {
+    my ($class, $duo, $uri, $data_ref) = @_;
+
+    # Retrieve the field specification for this object.
+    my $fields = $class->_fields;
+
+    # Make a copy of the data and convert all boolean values.
+    my %data = %{$data_ref};
+  FIELD:
+    for my $field (keys %{$fields}) {
+        my ($type, @flags) = _field_type($fields->{$field});
+        if (any { $_ eq 'boolean' } @flags) {
+            $data{$field} = $data{$field} ? \1 : \0;
+        }
+    }
+
+    # Create the object in Duo.
+    my $self = $duo->call_json('POST', $uri, \%data);
 
     # Bless and return the new object.
     bless($self, $class);
@@ -78,7 +141,7 @@ sub install_accessors {
 
     # Create an accessor for each one.
     for my $field (keys %{$fields}) {
-        my $type = $fields->{$field};
+        my $type = _field_type($fields->{$field});
 
         # For fields containing arrays, return a copy of the array instead
         # of the reference to the internal data structure in the object,
@@ -87,7 +150,11 @@ sub install_accessors {
         if ($type eq 'simple') {
             $code = sub { my $self = shift; return $self->{$field} };
         } else {
-            $code = sub { my $self = shift; return @{ $self->{$field} } };
+            $code = sub {
+                my $self = shift;
+                return if !$self->{$field};
+                return @{ $self->{$field} };
+            };
         }
 
         # Create and install the accessor.
@@ -126,8 +193,8 @@ Net::Duo::Object - Helper base class for Duo objects
 
 =head1 REQUIREMENTS
 
-Perl 5.14 or later and the module Sub::Install, which is available from
-CPAN.
+Perl 5.14 or later and the modules List::MoreUtils and Sub::Install, which
+are available from CPAN.
 
 =head1 DESCRIPTION
 
@@ -158,7 +225,9 @@ accessors for the class.
 The client class must provide a class method named _fields() that returns
 a reference to a hash.  The keys of the hash are the field names of the
 data stored in an object of that class.  The values specify the type of
-data stored in that field and must be chosen from the following:
+data stored in that field.  Each value may be either a simple string or a
+reference to an array, in which case the first value is the type and the
+remaining values are flags.  The types must be chosen from the following:
 
 =over 4
 
@@ -178,9 +247,30 @@ called with the resulting structures.
 
 =back
 
+The flags must be chosen from the following:
+
+=over 4
+
+=item C<boolean>
+
+This is a boolean field.  Convert all values to appropriate JSON boolean
+values before sending the data to Duo.  Only makes sense with a field of
+type C<simple>.
+
+=back
+
 =head1 CLASS METHODS
 
 =over 4
+
+=item create(DUO, URI, DATA)
+
+A general constructor for creating a new object in Duo.  Takes a Net::Duo
+object, the URI of the REST endpoint for object creation, and a reference
+to a hash of object data.  This method should be overridden by subclasses
+to provide the URI and only expose the DUO and DATA arguments to the
+caller.  Returns the newly-blessed object containing the data returned by
+Duo.
 
 =item install_accessors()
 
@@ -188,13 +278,13 @@ Using the field specification, creates accessor functions for each data
 field that return copies of the data stored in that field, or undef if
 there is no data.
 
-=item new(DATA)
+=item new(DUO, DATA)
 
-A general constructor for Net::Duo objects.  Takes a reference to a hash,
-which contains the data for an object of the class being constructed.
-Using the field specification for that class, the data will be copied out
-of the object into a Perl data structure, converting nested objects to
-other Net::Duo objects as required.
+A general constructor for Net::Duo objects.  Takes a Net::Duo object and a
+reference to a hash, which contains the data for an object of the class
+being constructed.  Using the field specification for that class, the data
+will be copied out of the object into a Perl data structure, converting
+nested objects to other Net::Duo objects as required.
 
 =back
 

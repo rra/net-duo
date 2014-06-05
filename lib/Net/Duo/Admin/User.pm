@@ -37,11 +37,24 @@ sub _fields {
 # Install our accessors.
 Net::Duo::Admin::User->install_accessors;
 
+# Override the create method to add the appropriate URI.
+#
+# $class    - Class of object to create
+# $duo      - Net::Duo object to use to create the object
+# $data_ref - Data for new object as a reference to a hash
+#
+# Returns: Newly-created object
+#  Throws: Net::Duo::Exception on any problem creating the object
+sub create {
+    my ($class, $duo, $data_ref) = @_;
+    return $class->SUPER::create($duo, '/admin/v1/users', $data_ref);
+}
+
 1;
 __END__
 
 =for stopwords
-Allbery MERCHANTABILITY NONINFRINGEMENT sublicense
+Allbery MERCHANTABILITY NONINFRINGEMENT sublicense realname
 
 =head1 NAME
 
@@ -63,6 +76,41 @@ tokens.
 =head1 CLASS METHODS
 
 =over 4
+
+=item create(DUO, DATA)
+
+Creates a new user in Duo and returns the resulting user as a new
+Net::Duo::Admin::User object.  DUO is the Net::Duo object that should be
+used to perform the creation.  DATA is a reference to a hash with the
+following keys:
+
+=over 4
+
+=item email
+
+The email address of this user.  Optional.
+
+=item notes
+
+Notes about this user.  Optional.
+
+=item realname
+
+The real name of this user.  Optional.
+
+=item status
+
+The status of this user.  See the L</status()> method below for the
+possible values.  Optional, and will be set to C<active> if no value
+is given.
+
+=item username
+
+The name of the user to create.  This should be unique within this Duo
+account and can be used to retrieve the user object again using the
+user() method of Net::Duo::Admin.  Required.
+
+=back
 
 =item new(DUO, DATA)
 
