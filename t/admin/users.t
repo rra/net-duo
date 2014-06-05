@@ -39,6 +39,101 @@ BEGIN {
     use_ok('Net::Duo::Admin');
 }
 
+# Data keys that can use simple verification.
+my @GROUP_KEYS = qw(desc name);
+my @USER_KEYS  = qw(user_id username realname email status last_login notes);
+my @TOKEN_KEYS = qw(serial token_id type);
+my @PHONE_KEYS = qw(
+  phone_id number extension name postdelay predelay type platform
+  activated sms_passcodes_sent
+);
+
+##############################################################################
+# Helper functions
+##############################################################################
+
+# Given a Net::Duo::Admin::User object and the data structure representation
+# of the JSON for that user, check that all the data fields match.  Test
+# results are reported via Test::More.
+#
+# $user     - The Net::Duo::Admin::User object
+# $expected - The data structure representing that user
+#
+# Returns: undef
+sub is_user {
+    my ($user, $expected) = @_;
+
+    # Check the object type.
+    isa_ok($user, 'Net::Duo::Admin::User');
+
+    # Check the top-level, simple data.  We can't just use is_deeply on the
+    # top-level object because we've converted some of the underlying hashes
+    # to other objects, so we walk specific keys and confirm they match.
+    for my $key (@USER_KEYS) {
+        is($user->$key, $expected->{$key}, "...$key");
+    }
+
+    # Iterate through the groups.
+    my @groups = $user->groups;
+    is(scalar(@groups), scalar(@{ $expected->{groups} }), '...group count');
+    for my $i (0 .. $#groups) {
+        my $seen_group     = $groups[$i];
+        my $expected_group = $expected->{groups}[$i];
+
+        # Check object type.
+        isa_ok($seen_group, 'Net::Duo::Admin::Group');
+
+        # Check the underlying data.
+        for my $key (@GROUP_KEYS) {
+            is($seen_group->$key, $expected_group->{$key}, "...group $i $key");
+        }
+    }
+
+    # Iterate through the phones.
+    my @phones = $user->phones;
+    is(scalar(@phones), scalar(@{ $expected->{phones} }), '...phone count');
+    for my $i (0 .. $#phones) {
+        my $seen_phone     = $phones[$i];
+        my $expected_phone = $expected->{phones}[$i];
+
+        # Check object type.
+        isa_ok($seen_phone, 'Net::Duo::Admin::Phone');
+
+        # Check the underlying simple data.
+        for my $key (@PHONE_KEYS) {
+            is($seen_phone->$key, $expected_phone->{$key}, "...phone $i $key");
+        }
+
+        # Check the capabilities, which is an array.
+        is_deeply(
+            [$seen_phone->capabilities],
+            $expected_phone->{capabilities},
+            '...phone capabilities'
+        );
+    }
+
+    # Iterate through the tokens.
+    my @tokens = $user->tokens;
+    is(scalar(@tokens), scalar(@{ $expected->{tokens} }), '...token count');
+    for my $i (0 .. $#tokens) {
+        my $seen_token     = $tokens[$i];
+        my $expected_token = $expected->{tokens}[$i];
+
+        # Check object type.
+        isa_ok($seen_token, 'Net::Duo::Admin::Token');
+
+        # Check the underlying data.
+        for my $key (@TOKEN_KEYS) {
+            is($seen_token->$key, $expected_token->{$key}, "...token $i $key");
+        }
+    }
+    return;
+}
+
+##############################################################################
+# Tests
+##############################################################################
+
 # Create a JSON decoder.
 my $json = JSON->new->utf8(1);
 
@@ -65,61 +160,28 @@ my @users = $duo->users;
 
 # Should be an array of a single user.
 is(scalar(@users), 1, 'users method returns a single user');
-my $user = $users[0];
-isa_ok($user, 'Net::Duo::Admin::User');
 
-# Check the top-level, simple data.  We can't just use is_deeply on the
-# top-level object because we've converted some of the underlying hashes to
-# other objects, so we walk specific keys and confirm they match.
+# Verify that the returned user is correct.
 my $raw      = slurp('t/data/responses/users.json');
 my $expected = $json->decode($raw)->[0];
-for my $key (qw(user_id username realname email status last_login notes)) {
-    is($user->$key, $expected->{$key}, "...$key");
-}
+is_user($users[0], $expected);
 
-# Should be one group.
-my @groups = $user->groups;
-is(scalar(@groups), 1, '...one group');
-my $group = $groups[0];
-isa_ok($group, 'Net::Duo::Admin::Group');
-
-# Check the underlying data.
-for my $key (qw(desc name)) {
-    is($group->$key, $expected->{groups}[0]{$key}, "...group $key");
-}
-
-# Should be one phone.
-my @phones = $user->phones;
-is(scalar(@phones), 1, '...one phone');
-my $phone = $phones[0];
-isa_ok($phone, 'Net::Duo::Admin::Phone');
-
-# Check the underlying simple data.
-my @phone_keys = qw(
-  phone_id number extension name postdelay predelay type platform activated
-  sms_passcodes_sent
+# Now, try a user call with a specified username.
+$mock->expect(
+    {
+        method        => 'GET',
+        uri           => '/admin/v1/users',
+        content       => { username => 'jdoe' },
+        response_file => 't/data/responses/user.json',
+    }
 );
-for my $key (@phone_keys) {
-    is($phone->$key, $expected->{phones}[0]{$key}, "...phone $key");
-}
+note('Testing users endpoint with search for jdoe');
+my $user = $duo->user('jdoe');
 
-# Check the capabilities, which is an array.
-is_deeply(
-    [$phone->capabilities],
-    $expected->{phones}[0]{capabilities},
-    '...phone capabilities'
-);
-
-# Should be one token.
-my @tokens = $user->tokens;
-is(scalar(@tokens), 1, '...one token');
-my $token = $tokens[0];
-isa_ok($token, 'Net::Duo::Admin::Token');
-
-# Check the underlying data.
-for my $key (qw(serial token_id type)) {
-    is($token->$key, $expected->{tokens}[0]{$key}, "...token $key");
-}
+# Verify that the returned user is correct.
+$raw      = slurp('t/data/responses/user.json');
+$expected = $json->decode($raw)->[0];
+is_user($user, $expected);
 
 # Finished.  Tell Test::More that.
 done_testing();

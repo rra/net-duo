@@ -21,10 +21,30 @@ use Net::Duo::Admin::User;
 # Admin API methods
 ##############################################################################
 
-# Retrieve a user or users associated with a Duo account.  If the username
-# parameter is given, only that user will be returned.  Otherwise, all users
-# will be returned.  When retrieving a single user, an empty reply indicates
-# no user by that username exists.
+# Retrieve a single user by username.  An empty reply indicates that no user
+# by that username exists.
+#
+# $self     - The Net::Duo::Admin object
+# $username - Username whose record to retrieve
+#
+# Returns: A single Net::Duo::User object or undef
+#  Throws: Net::Duo::Exception on failure
+sub user {
+    my ($self, $username) = @_;
+
+    # Make the Duo call and get the decoded result.
+    my $args = { username => $username };
+    my $result = $self->call_json('GET', '/admin/v1/users', $args);
+
+    # Convert the returned user into a Net::Duo::Admin::User object.
+    if (@{$result}) {
+        return Net::Duo::Admin::User->new($self, $result->[0]);
+    } else {
+        return;
+    }
+}
+
+# Retrieve all users associated with a Duo account.
 #
 # $self     - The Net::Duo::Admin object
 # $username - Retrieve the record for only this user (optional)
@@ -107,6 +127,12 @@ documentation of the possible arguments.
 =head1 INSTANCE METHODS
 
 =over 4
+
+=item user(USERNAME)
+
+Retrieves a single user by username and returns it as a
+Net::Duo::Admin::User object if found.  If no user with that username
+exists, returns undef, and does not throw an exception.
 
 =item users()
 
