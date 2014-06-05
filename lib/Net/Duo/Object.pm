@@ -111,7 +111,7 @@ sub create {
     for my $field (keys %{$fields}) {
         my ($type, @flags) = _field_type($fields->{$field});
         if (any { $_ eq 'boolean' } @flags) {
-            $data{$field} = $data{$field} ? \1 : \0;
+            $data{$field} = $data{$field} ? 'true' : 'false';
         }
     }
 
@@ -253,9 +253,8 @@ The flags must be chosen from the following:
 
 =item C<boolean>
 
-This is a boolean field.  Convert all values to appropriate JSON boolean
-values before sending the data to Duo.  Only makes sense with a field of
-type C<simple>.
+This is a boolean field.  Convert all values to C<true> or C<false> before
+sending the data to Duo.  Only makes sense with a field of type C<simple>.
 
 =back
 

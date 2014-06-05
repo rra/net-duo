@@ -71,7 +71,7 @@ $mock->expect(
 note('Testing token create endpoint');
 my $token = Net::Duo::Admin::Token->create($duo, $data);
 
-# Verify that the returned user is correct.  (Just use the same return data.)
+# Verify that the returned token is correct.  (Just use the same return data.)
 my $raw      = slurp('t/data/responses/token-create.json');
 my $expected = $json->decode($raw);
 is_admin_token($token, $expected);

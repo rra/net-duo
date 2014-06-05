@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 #
-# Test suite for phone handling in the Admin API.
+# Test suite for group handling in the Admin API.
 #
 # Written by Russ Allbery <rra@cpan.org>
 # Copyright 2014
@@ -34,7 +34,7 @@ use JSON;
 use Perl6::Slurp;
 use Test::Mock::Duo::Agent;
 use Test::More;
-use Test::RRA::Duo qw(is_admin_phone);
+use Test::RRA::Duo qw(is_admin_group);
 
 BEGIN {
     use_ok('Net::Duo::Admin');
@@ -53,26 +53,39 @@ $args{user_agent} = $mock;
 my $duo = Net::Duo::Admin->new(\%args);
 isa_ok($duo, 'Net::Duo::Admin');
 
-# Create a new phone.
+# Data for the group creation.  Use a few ways to specify true and false.
 my $data = {
-    number => '+15555550100',
-    name   => 'Random test phone',
+    name          => 'Example Group',
+    desc          => 'This is an example group',
+    push_enabled  => 1,
+    sms_enabled   => 0,
+    status        => 'active',
+    voice_enabled => 'yes',
 };
+
+# Set up the mock for creating a new group.  It will see the converted true
+# and false values.
+my $post_data = { %{$data} };
+$post_data->{push_enabled}  = 'true';
+$post_data->{sms_enabled}   = 'false';
+$post_data->{voice_enabled} = 'true';
 $mock->expect(
     {
         method        => 'POST',
-        uri           => '/admin/v1/phones',
-        content       => $data,
-        response_file => 't/data/responses/phone-create.json',
+        uri           => '/admin/v1/groups',
+        content       => $post_data,
+        response_file => 't/data/responses/group-create.json',
     }
 );
-note('Testing phone create endpoint');
-my $phone = Net::Duo::Admin::Phone->create($duo, $data);
 
-# Verify that the returned phone is correct.  (Just use the same return data.)
-my $raw      = slurp('t/data/responses/phone-create.json');
+# Attempt the create call.
+note('Testing group create endpoint');
+my $token = Net::Duo::Admin::Group->create($duo, $data);
+
+# Verify that the returned group is correct.  (Just use the same return data.)
+my $raw      = slurp('t/data/responses/group-create.json');
 my $expected = $json->decode($raw);
-is_admin_phone($phone, $expected);
+is_admin_group($token, $expected);
 
 # Finished.  Tell Test::More that.
 done_testing();
