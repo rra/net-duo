@@ -40,15 +40,6 @@ BEGIN {
     use_ok('Net::Duo::Admin');
 }
 
-# Data keys that can use simple verification.
-my @GROUP_KEYS = qw(desc name);
-my @USER_KEYS  = qw(user_id username realname email status last_login notes);
-my @TOKEN_KEYS = qw(serial token_id type);
-my @PHONE_KEYS = qw(
-  phone_id number extension name postdelay predelay type platform
-  activated sms_passcodes_sent
-);
-
 # Create a JSON decoder.
 my $json = JSON->new->utf8(1);
 
