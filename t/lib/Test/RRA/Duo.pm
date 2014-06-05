@@ -111,6 +111,7 @@ sub is_admin_group {
     isa_ok($seen, 'Net::Duo::Admin::Group', $prefix);
 
     # Check the underlying data.
+    $prefix //= q{};
     for my $key (@GROUP_KEYS) {
         is($seen->$key, $expected->{$key}, "...$prefix $key");
     }
@@ -133,6 +134,7 @@ sub is_admin_phone {
     isa_ok($seen, 'Net::Duo::Admin::Phone', $prefix);
 
     # Check the underlying simple data.
+    $prefix //= q{};
     for my $key (@PHONE_KEYS) {
         is($seen->$key, $expected->{$key}, "...$prefix $key");
     }
@@ -162,6 +164,7 @@ sub is_admin_token {
     isa_ok($seen, 'Net::Duo::Admin::Token', $prefix);
 
     # Check the underlying simple data.
+    $prefix //= q{};
     for my $key (@TOKEN_KEYS) {
         is($seen->$key, $expected->{$key}, "...$prefix $key");
     }
