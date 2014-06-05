@@ -1,0 +1,7 @@
+                           Net::Duo To-Do List
+
+Test suite:
+
+ * Test::RRA::Duo should dynamically discover the fields that can compared
+   with simple comparisons, and the fields that can be compared with
+   is_deeply, by analyzing the return of _fields in the relevant class.

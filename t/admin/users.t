@@ -34,6 +34,7 @@ use JSON;
 use Perl6::Slurp;
 use Test::Mock::Duo::Agent;
 use Test::More;
+use Test::RRA::Duo qw(is_admin_user);
 
 BEGIN {
     use_ok('Net::Duo::Admin');
@@ -47,95 +48,6 @@ my @PHONE_KEYS = qw(
   phone_id number extension name postdelay predelay type platform
   activated sms_passcodes_sent
 );
-
-##############################################################################
-# Helper functions
-##############################################################################
-
-# Given a Net::Duo::Admin::User object and the data structure representation
-# of the JSON for that user, check that all the data fields match.  Test
-# results are reported via Test::More.
-#
-# $user     - The Net::Duo::Admin::User object
-# $expected - The data structure representing that user
-#
-# Returns: undef
-sub is_user {
-    my ($user, $expected) = @_;
-
-    # Check the object type.
-    isa_ok($user, 'Net::Duo::Admin::User');
-
-    # Check the top-level, simple data.  We can't just use is_deeply on the
-    # top-level object because we've converted some of the underlying hashes
-    # to other objects, so we walk specific keys and confirm they match.
-    for my $key (@USER_KEYS) {
-        is($user->$key, $expected->{$key}, "...$key");
-    }
-
-    # Iterate through the groups.
-    my @groups = $user->groups;
-    my $count = $expected->{groups} ? scalar(@{ $expected->{groups} }) : 0;
-    is(scalar(@groups), $count, '...group count');
-    for my $i (0 .. $#groups) {
-        my $seen_group     = $groups[$i];
-        my $expected_group = $expected->{groups}[$i];
-
-        # Check object type.
-        isa_ok($seen_group, 'Net::Duo::Admin::Group');
-
-        # Check the underlying data.
-        for my $key (@GROUP_KEYS) {
-            is($seen_group->$key, $expected_group->{$key}, "...group $i $key");
-        }
-    }
-
-    # Iterate through the phones.
-    my @phones = $user->phones;
-    $count = $expected->{phones} ? scalar(@{ $expected->{phones} }) : 0;
-    is(scalar(@phones), $count, '...phone count');
-    for my $i (0 .. $#phones) {
-        my $seen_phone     = $phones[$i];
-        my $expected_phone = $expected->{phones}[$i];
-
-        # Check object type.
-        isa_ok($seen_phone, 'Net::Duo::Admin::Phone');
-
-        # Check the underlying simple data.
-        for my $key (@PHONE_KEYS) {
-            is($seen_phone->$key, $expected_phone->{$key}, "...phone $i $key");
-        }
-
-        # Check the capabilities, which is an array.
-        is_deeply(
-            [$seen_phone->capabilities],
-            $expected_phone->{capabilities},
-            '...phone capabilities'
-        );
-    }
-
-    # Iterate through the tokens.
-    my @tokens = $user->tokens;
-    $count = $expected->{tokens} ? scalar(@{ $expected->{tokens} }) : 0;
-    is(scalar(@tokens), $count, '...token count');
-    for my $i (0 .. $#tokens) {
-        my $seen_token     = $tokens[$i];
-        my $expected_token = $expected->{tokens}[$i];
-
-        # Check object type.
-        isa_ok($seen_token, 'Net::Duo::Admin::Token');
-
-        # Check the underlying data.
-        for my $key (@TOKEN_KEYS) {
-            is($seen_token->$key, $expected_token->{$key}, "...token $i $key");
-        }
-    }
-    return;
-}
-
-##############################################################################
-# Tests
-##############################################################################
 
 # Create a JSON decoder.
 my $json = JSON->new->utf8(1);
@@ -167,7 +79,7 @@ is(scalar(@users), 1, 'users method returns a single user');
 # Verify that the returned user is correct.
 my $raw      = slurp('t/data/responses/users.json');
 my $expected = $json->decode($raw)->[0];
-is_user($users[0], $expected);
+is_admin_user($users[0], $expected);
 
 # Now, try a user call with a specified username.
 $mock->expect(
@@ -184,7 +96,7 @@ my $user = $duo->user('jdoe');
 # Verify that the returned user is correct.
 $raw      = slurp('t/data/responses/user.json');
 $expected = $json->decode($raw)->[0];
-is_user($user, $expected);
+is_admin_user($user, $expected);
 
 # Create a new user.
 my $data = {
@@ -208,7 +120,7 @@ $user = Net::Duo::Admin::User->create($duo, $data);
 # Verify that the returned user is correct.  (Just use the same return data.)
 $raw      = slurp('t/data/responses/user-create.json');
 $expected = $json->decode($raw);
-is_user($user, $expected);
+is_admin_user($user, $expected);
 
 # Finished.  Tell Test::More that.
 done_testing();
