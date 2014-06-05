@@ -38,17 +38,12 @@ sub new {
     my $fields = $class->_fields;
 
     # Make a deep copy of the data following the field specification.
-    ## no critic (ControlStructures::ProhibitCascadingIfElse)
     my $self = { _duo => $duo };
     for my $field (keys %{$fields}) {
         my $type  = $fields->{$field};
         my $value = $data_ref->{$field};
         if ($type eq 'simple') {
             $self->{$field} = $value;
-        } elsif ($type eq 'nullable') {
-            if (defined($value) && $value ne 'null') {
-                $self->{$field} = $value;
-            }
         } elsif ($type eq 'array') {
             $self->{$field} = [@{$value}];
         } elsif (defined($value)) {
@@ -59,7 +54,6 @@ sub new {
             $self->{$field} = \@objects;
         }
     }
-    ## use critic
 
     # Bless and return the new object.
     bless($self, $class);
@@ -90,18 +84,14 @@ sub install_accessors {
         # of the reference to the internal data structure in the object,
         # preventing client manipulation of our internals.
         my $code;
-        if ($type eq 'simple' || $type eq 'nullable') {
+        if ($type eq 'simple') {
             $code = sub { my $self = shift; return $self->{$field} };
         } else {
             $code = sub { my $self = shift; return @{ $self->{$field} } };
         }
 
         # Create and install the accessor.
-        my $spec = {
-            code => $code,
-            into => $class,
-            as   => $field,
-        };
+        my $spec = { code => $code, into => $class, as => $field };
         Sub::Install::install_sub($spec);
     }
     return;
@@ -175,11 +165,6 @@ data stored in that field and must be chosen from the following:
 =item C<array>
 
 An array of simple text, number, or boolean values.
-
-=item C<nullable>
-
-A simple text, number, or boolean field, but the value C<null> will be
-converted to undef.
 
 =item C<simple>
 

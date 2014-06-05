@@ -26,7 +26,7 @@ sub _fields {
         email      => 'simple',
         status     => 'simple',
         groups     => 'Net::Duo::Admin::Group',
-        last_login => 'nullable',
+        last_login => 'simple',
         notes      => 'simple',
         phones     => 'Net::Duo::Admin::Phone',
         tokens     => 'Net::Duo::Admin::Token',
