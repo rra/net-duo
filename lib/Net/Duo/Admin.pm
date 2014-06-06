@@ -107,6 +107,12 @@ changes that value.  No changes are made to the Duo record itself until
 the commit() method is called on the object, which will make the
 underlying Duo API call to update the data.
 
+Some objects have associated lists of other objects.  For example, a user
+has a list of phones and a list of tokens.  Wherever this pattern occurs,
+new objects can be added to that list with a method starting with C<add_>
+and removed with a method starting with C<remove_>.  These changes are
+pushed to Duo immediately and do not wait for the next commit().
+
 On failure, all methods throw a Net::Duo::Exception object.  This can be
 interpolated into a string for a simple error message, or inspected with
 method calls for more details.  This is also true of all methods in all

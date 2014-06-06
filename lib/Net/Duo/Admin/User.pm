@@ -11,9 +11,11 @@ use warnings;
 
 use parent qw(Net::Duo::Object);
 
+use Net::Duo;
 use Net::Duo::Admin::Group;
 use Net::Duo::Admin::Phone;
 use Net::Duo::Admin::Token;
+use Net::Duo::Exception;
 
 # Data specification for converting JSON into our object representation.  See
 # the Net::Duo::Object documentation for syntax information.
@@ -50,6 +52,44 @@ sub create {
     return $class->SUPER::create($duo, '/admin/v1/users', $data_ref);
 }
 
+# Add a phone to this user.  All existing phones will be left unchanged.
+#
+# $self  - The Net::Duo::Admin::User object to modify
+# $phone - The Net::Duo::Admin::Phone object to add
+#
+# Returns: undef
+#  Throws: Net::Duo::Exception on any problem adding the phone
+## no critic (ErrorHandling::RequireCarping)
+sub add_phone {
+    my ($self, $phone) = @_;
+    if (!$phone->isa('Net::Duo::Admin::Phone')) {
+        die Net::Duo::Exception->internal('invalid argument to add_phone');
+    }
+    my $uri = "/admin/v1/users/$self->{user_id}/phones";
+    $self->{_duo}->call_json('POST', $uri, { phone_id => $phone->phone_id });
+    return;
+}
+## use critic
+
+# Add a token to this user.  All existing tokens will be left unchanged.
+#
+# $self  - The Net::Duo::Admin::User object to modify
+# $token - The Net::Duo::Admin::Token object to add
+#
+# Returns: undef
+#  Throws: Net::Duo::Exception on any problem adding the phone
+## no critic (ErrorHandling::RequireCarping)
+sub add_token {
+    my ($self, $token) = @_;
+    if (!$token->isa('Net::Duo::Admin::Token')) {
+        die Net::Duo::Exception->internal('invalid argument to add_token');
+    }
+    my $uri = "/admin/v1/users/$self->{user_id}/tokens";
+    $self->{_duo}->call_json('POST', $uri, { token_id => $token->token_id });
+    return;
+}
+## use critic
+
 # Delete the user from Duo.  After this call, the object should be treated as
 # read-only since it can no longer be usefully updated.
 #
@@ -61,6 +101,44 @@ sub create {
 sub delete {
     my ($self) = @_;
     $self->{_duo}->call_json('DELETE', "/admin/v1/users/$self->{user_id}");
+    return;
+}
+## use critic
+
+# Remove a phone from this user.  Other phones will be left unchanged.
+#
+# $self  - The Net::Duo::Admin::User object to modify
+# $phone - The Net::Duo::Admin::Phone object to remove
+#
+# Returns: undef
+#  Throws: Net::Duo::Exception on any problem adding the phone
+## no critic (ErrorHandling::RequireCarping)
+sub remove_phone {
+    my ($self, $phone) = @_;
+    if (!$phone->isa('Net::Duo::Admin::Phone')) {
+        die Net::Duo::Exception->internal('invalid argument to remove_phone');
+    }
+    my $uri = "/admin/v1/users/$self->{user_id}/phones/" . $phone->phone_id;
+    $self->{_duo}->call_json('DELETE', $uri);
+    return;
+}
+## use critic
+
+# Remove a token from this user.  Other tokens will be left unchanged.
+#
+# $self  - The Net::Duo::Admin::User object to modify
+# $token - The Net::Duo::Admin::Token object to remove
+#
+# Returns: undef
+#  Throws: Net::Duo::Exception on any problem adding the phone
+## no critic (ErrorHandling::RequireCarping)
+sub remove_token {
+    my ($self, $token) = @_;
+    if (!$token->isa('Net::Duo::Admin::Token')) {
+        die Net::Duo::Exception->internal('invalid argument to remove_token');
+    }
+    my $uri = "/admin/v1/users/$self->{user_id}/tokens/" . $token->token_id;
+    $self->{_duo}->call_json('DELETE', $uri);
     return;
 }
 ## use critic
@@ -140,11 +218,31 @@ for a single user, after JSON decoding.
 
 =over 4
 
+=item add_phone(PHONE)
+
+Associate the Net::Duo::Admin::Phone object PHONE with this user.  Other
+phones associated with this user will be left unchanged.
+
+=item add_token(TOKEN)
+
+Associate the Net::Duo::Admin::Token object TOKEN with this user.  Other
+tokens associated with this user will be left unchanged.
+
 =item delete()
 
 Delete this user from Duo.  After successful completion of this call,
 the Net::Duo::Admin::User object should be considered read-only, since no
 further changes to the object can be meaningfully sent to Duo.
+
+=item remove_phone(PHONE)
+
+Disassociate the Net::Duo::Admin::Phone object PHONE from this user.  Other
+phones associated with this user will be left unchanged.
+
+=item remove_token(TOKEN)
+
+Disassociate the Net::Duo::Admin::Token object TOKEN from this user.  Other
+tokens associated with this user will be left unchanged.
 
 =back
 

@@ -89,6 +89,57 @@ $raw      = slurp('t/data/responses/user.json');
 $expected = $json->decode($raw)->[0];
 is_admin_user($user, $expected);
 
+# Remove the first phone from that user.
+my $user_id  = $user->user_id;
+my $phone    = ($user->phones)[0];
+my $phone_id = $phone->phone_id;
+$mock->expect(
+    {
+        method        => 'DELETE',
+        uri           => "/admin/v1/users/$user_id/phones/$phone_id",
+        response_data => q{},
+    }
+);
+note('Testing disassociating a phone with a user');
+$user->remove_phone($phone);
+
+# Add the phone back.
+$mock->expect(
+    {
+        method        => 'POST',
+        uri           => "/admin/v1/users/$user_id/phones",
+        content       => { phone_id => $phone_id },
+        response_data => q{},
+    }
+);
+note('Testing associating a phone with a user');
+$user->add_phone($phone);
+
+# Remove the first token from that user.
+my $token    = ($user->tokens)[0];
+my $token_id = $token->token_id;
+$mock->expect(
+    {
+        method        => 'DELETE',
+        uri           => "/admin/v1/users/$user_id/tokens/$token_id",
+        response_data => q{},
+    }
+);
+note('Testing disassociating a token with a user');
+$user->remove_token($token);
+
+# Add the token back.
+$mock->expect(
+    {
+        method        => 'POST',
+        uri           => "/admin/v1/users/$user_id/tokens",
+        content       => { token_id => $token_id },
+        response_data => q{},
+    }
+);
+note('Testing associating a token with a user');
+$user->add_token($token);
+
 # Create a new user.
 my $data = {
     username => 'jdoe',
