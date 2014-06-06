@@ -76,5 +76,16 @@ my $raw      = slurp('t/data/responses/token-create.json');
 my $expected = $json->decode($raw);
 is_admin_token($token, $expected);
 
+# Delete that token.
+$mock->expect(
+    {
+        method        => 'DELETE',
+        uri           => "/admin/v1/tokens/$expected->{token_id}",
+        response_data => q{},
+    }
+);
+note('Testing token delete endpoint');
+$token->delete;
+
 # Finished.  Tell Test::More that.
 done_testing();

@@ -80,12 +80,23 @@ $mock->expect(
 
 # Attempt the create call.
 note('Testing group create endpoint');
-my $token = Net::Duo::Admin::Group->create($duo, $data);
+my $group = Net::Duo::Admin::Group->create($duo, $data);
 
 # Verify that the returned group is correct.  (Just use the same return data.)
 my $raw      = slurp('t/data/responses/group-create.json');
 my $expected = $json->decode($raw);
-is_admin_group($token, $expected);
+is_admin_group($group, $expected);
+
+# Delete that group.
+$mock->expect(
+    {
+        method        => 'DELETE',
+        uri           => "/admin/v1/groups/$expected->{group_id}",
+        response_data => q{},
+    }
+);
+note('Testing group delete endpoint');
+$group->delete;
 
 # Finished.  Tell Test::More that.
 done_testing();

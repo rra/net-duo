@@ -113,5 +113,16 @@ $raw      = slurp('t/data/responses/user-create.json');
 $expected = $json->decode($raw);
 is_admin_user($user, $expected);
 
+# Delete that user.
+$mock->expect(
+    {
+        method        => 'DELETE',
+        uri           => "/admin/v1/users/$expected->{user_id}",
+        response_data => q{},
+    }
+);
+note('Testing user delete endpoint');
+$user->delete;
+
 # Finished.  Tell Test::More that.
 done_testing();

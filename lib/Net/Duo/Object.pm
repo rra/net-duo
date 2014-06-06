@@ -118,6 +118,9 @@ sub create {
     # Create the object in Duo.
     my $self = $duo->call_json('POST', $uri, \%data);
 
+    # Add the Net::Duo object.
+    $self->{_duo} = $duo;
+
     # Bless and return the new object.
     bless($self, $class);
     return $self;

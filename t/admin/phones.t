@@ -74,5 +74,16 @@ my $raw      = slurp('t/data/responses/phone-create.json');
 my $expected = $json->decode($raw);
 is_admin_phone($phone, $expected);
 
+# Delete that phone.
+$mock->expect(
+    {
+        method        => 'DELETE',
+        uri           => "/admin/v1/phones/$expected->{phone_id}",
+        response_data => q{},
+    }
+);
+note('Testing phone delete endpoint');
+$phone->delete;
+
 # Finished.  Tell Test::More that.
 done_testing();

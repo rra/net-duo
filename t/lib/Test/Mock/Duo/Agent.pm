@@ -63,6 +63,8 @@ sub request {
     if ($request->method eq 'GET') {
         if ($uri =~ s{ [?] (.*) }{}xms) {
             $content = $1;
+        } else {
+            $content = q{};
         }
     } else {
         $content = $request->content;
@@ -83,7 +85,7 @@ sub request {
     if ($self->{expected}{content}) {
         is_deeply(\%content, $self->{expected}{content}, 'Content');
     } else {
-        is($content, undef, 'Content');
+        is($content, q{}, 'Content');
     }
 
     # Return the configured response and clear state.
@@ -145,6 +147,7 @@ sub new {
 #   uri           - Expected URI of the request without any query string
 #   content       - Expected query or post data as reference (may be undef)
 #   response      - HTTP::Response object to return to the caller
+#   response_data - Partial data structure to add to generic JSON in response
 #   response_file - File containing JSON to return as a respose
 #
 # Returns: undef
@@ -154,11 +157,12 @@ sub expect {
     my ($self, $args_ref) = @_;
 
     # Verify consistency of the arguments.
-    if (!$args_ref->{response} && !defined($args_ref->{response_file})) {
-        croak('no response or response_file specified');
-    }
-    if ($args_ref->{response} && defined($args_ref->{response_file})) {
-        croak('both response and response_file given');
+    my @response_args = qw(response response_data response_file);
+    my $response_count = grep { defined($args_ref->{$_}) } @response_args;
+    if ($response_count < 1) {
+        croak('no response, response_data, or response_file specified');
+    } elsif ($response_count > 1) {
+        croak('too many of response, response_data, and response_file given');
     }
 
     # Build the response object if needed.
@@ -168,9 +172,15 @@ sub expect {
     } else {
         $response = HTTP::Response->new(200, 'Success');
         $response->header('Content-Type', 'application/json');
-        my $contents = slurp($args_ref->{response_file});
-        my $data     = $self->{json}->decode($contents);
-        my $reply    = { stat => 'OK', response => $data };
+        my $reply;
+        if (defined($args_ref->{response_data})) {
+            my $data = $args_ref->{response_data};
+            $reply = { stat => 'OK', response => $data };
+        } else {
+            my $contents = slurp($args_ref->{response_file});
+            my $data     = $self->{json}->decode($contents);
+            $reply = { stat => 'OK', response => $data };
+        }
         $response->content($self->{json}->encode($reply));
     }
 

@@ -50,6 +50,21 @@ sub create {
     return $class->SUPER::create($duo, '/admin/v1/users', $data_ref);
 }
 
+# Delete the user from Duo.  After this call, the object should be treated as
+# read-only since it can no longer be usefully updated.
+#
+# $self - The Net::Duo::Admin::User object to delete
+#
+# Returns: undef
+#  Throws: Net::Duo::Exception on any problem deleting the object
+## no critic (Subroutines::ProhibitBuiltinHomonyms)
+sub delete {
+    my ($self) = @_;
+    $self->{_duo}->call_json('DELETE', "/admin/v1/users/$self->{user_id}");
+    return;
+}
+## use critic
+
 1;
 __END__
 
@@ -121,7 +136,19 @@ for a single user, after JSON decoding.
 
 =back
 
-=head1 INSTANCE METHODS
+=head1 INSTANCE ACTION METHODS
+
+=over 4
+
+=item delete()
+
+Delete this user from Duo.  After successful completion of this call,
+the Net::Duo::Admin::User object should be considered read-only, since no
+further changes to the object can be meaningfully sent to Duo.
+
+=back
+
+=head1 INSTANCE DATA METHODS
 
 =over 4
 
