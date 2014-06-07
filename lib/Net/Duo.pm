@@ -109,7 +109,7 @@ sub _canonicalize_args {
     }
 
     # Return the arguments joined with &.
-    return join(q{&}, @pairs);
+    return join(q{&}, sort(@pairs));
 }
 
 # Internal method to sign a Duo API call and stores the appropriate
