@@ -33,6 +33,46 @@ sub check {
     return $result->{time};
 }
 
+# Send one or more passcodes (depending on Duo configuration) to a user via
+# SMS.
+#
+# $self     - The Net::Duo::Auth object
+# $username - The username to send SMS passcodes to
+#
+# Returns: Status of the request.  Will be 'sent' on success
+#  Throws: Net::Duo::Exception on failure
+sub sms_passcodes {
+    my ($self, $username) = @_;
+
+    my %auth = (username => $username,
+                factor   => 'sms',
+                device   => 'auto',
+               );
+
+    my $result = $self->call_json('POST', '/auth/v2/auth', \%auth);
+    return $result->{status};
+}
+
+# Validate a passcode given to us by a user.
+#
+# $self     - The Net::Duo::Auth object
+# $username - The username to send SMS passcodes to
+# $passcode - The passcode given by the user
+#
+# Returns: Status of the auth.  Will be 'allow' on success.
+#  Throws: Net::Duo::Exception on failure
+sub validate_passcode {
+    my ($self, $username, $passcode) = @_;
+
+    my %auth = (username => $username,
+                factor   => 'passcode',
+                passcode => $passcode,
+               );
+
+    my $result = $self->call_json('POST', '/auth/v2/auth', \%auth);
+    return $result->{status};
+}
+
 1;
 __END__
 
