@@ -80,13 +80,11 @@ $mock->expect(
 
 # Make the call and check the response.
 note('Testing token validation');
-is($duo->validate_passcode('user', 'passcode'), 'allow',
-   'Decoded /auth response is correct');
+is($duo->validate_passcode('user', 'passcode'),
+    'allow', 'Decoded /auth response is correct');
 
 # Out of band validation.
-$reply->{response} = {
-    txid => 'id',
-};
+$reply->{response} = { txid => 'id' };
 $response->content($json->encode($reply));
 $mock->expect(
     {
@@ -102,8 +100,8 @@ $mock->expect(
     }
 );
 note('Testing out-of-band validation');
-is($duo->validate_out_of_band('user'), 'id',
-   'Decoded /auth response is correct');
+is($duo->validate_out_of_band('user'),
+    'id', 'Decoded /auth response is correct');
 
 # Out of band auth_status.
 $reply->{response} = {
@@ -121,8 +119,8 @@ $mock->expect(
     }
 );
 note('Testing auth_status');
-is($duo->auth_status('id'), 'allow',
-   'Decoded /auth_status response is correct');
+is($duo->auth_status('id'),
+    'allow', 'Decoded /auth_status response is correct');
 
 # Finished.  Tell Test::More that.
 done_testing();

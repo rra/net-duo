@@ -56,8 +56,8 @@ my $json = JSON->new->utf8(1);
 my $reply = {
     stat     => 'OK',
     response => {
-        result     => 'deny',
-        status     => 'sent',
+        result => 'deny',
+        status => 'sent',
     },
 };
 my $response = HTTP::Response->new;

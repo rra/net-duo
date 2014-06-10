@@ -1,5 +1,15 @@
                            Net::Duo To-Do List
 
+Authentication:
+
+ * The sms_passcodes method should return true or undef instead of a
+   status and should throw an exception using status_msg on failure, and
+   similarly for validate_passcode and auth_status.
+
+ * Consider having validate_out_of_band return an object for an async
+   authentication that supports a status method and an id accessor method,
+   and can also be constructed from its id.
+
 Test suite:
 
  * Test::RRA::Duo should dynamically discover the fields that can compared

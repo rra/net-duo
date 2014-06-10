@@ -27,8 +27,6 @@ use parent qw(Net::Duo);
 #  Throws: Net::Duo::Exception on failure
 sub check {
     my ($self) = @_;
-
-    # Make the Duo call and get the decoded result.
     my $result = $self->call_json('GET', '/auth/v2/check');
     return $result->{time};
 }
@@ -43,13 +41,12 @@ sub check {
 #  Throws: Net::Duo::Exception on failure
 sub sms_passcodes {
     my ($self, $username) = @_;
-
-    my %auth = (username => $username,
-                factor   => 'sms',
-                device   => 'auto',
-               );
-
-    my $result = $self->call_json('POST', '/auth/v2/auth', \%auth);
+    my $data = {
+        username => $username,
+        factor   => 'sms',
+        device   => 'auto',
+    };
+    my $result = $self->call_json('POST', '/auth/v2/auth', $data);
     return $result->{status};
 }
 
@@ -62,14 +59,13 @@ sub sms_passcodes {
 #  Throws: Net::Duo::Exception on failure
 sub validate_out_of_band {
     my ($self, $username) = @_;
-
-    my %auth = (username => $username,
-                factor   => 'auto',
-                device   => 'auto',
-                async    => 1,
-               );
-
-    my $result = $self->call_json('POST', '/auth/v2/auth', \%auth);
+    my $data = {
+        username => $username,
+        factor   => 'auto',
+        device   => 'auto',
+        async    => 1,
+    };
+    my $result = $self->call_json('POST', '/auth/v2/auth', $data);
     return $result->{txid};
 }
 
@@ -83,13 +79,12 @@ sub validate_out_of_band {
 #  Throws: Net::Duo::Exception on failure
 sub validate_passcode {
     my ($self, $username, $passcode) = @_;
-
-    my %auth = (username => $username,
-                factor   => 'passcode',
-                passcode => $passcode,
-               );
-
-    my $result = $self->call_json('POST', '/auth/v2/auth', \%auth);
+    my $data = {
+        username => $username,
+        factor   => 'passcode',
+        passcode => $passcode,
+    };
+    my $result = $self->call_json('POST', '/auth/v2/auth', $data);
     return $result->{status};
 }
 
@@ -103,10 +98,8 @@ sub validate_passcode {
 #  Throws: Net::Duo::Exception on failure
 sub auth_status {
     my ($self, $transaction_id) = @_;
-
-    my %status = (txid => $transaction_id);
-
-    my $result = $self->call_json('GET', '/auth/v2/auth_status', \%status);
+    my $data = { txid => $transaction_id };
+    my $result = $self->call_json('GET', '/auth/v2/auth_status', $data);
     return $result->{result};
 }
 
@@ -114,7 +107,8 @@ sub auth_status {
 __END__
 
 =for stopwords
-Allbery Auth MERCHANTABILITY NONINFRINGEMENT sublicense
+Allbery Auth MERCHANTABILITY NONINFRINGEMENT sublicense SMS passcode
+passcodes
 
 =head1 NAME
 
@@ -170,41 +164,43 @@ documentation of the possible arguments.
 
 =over 4
 
+=item auth_status(ID)
+
+Calls the Duo C<auth_status> endpoint.  This is used to check the current
+status of an authentication attempt that cannot be immediately verified,
+such as a Duo Push or phone call.  On success, it returns the current
+result for the authentication attempt.  C<allow> or C<deny> are simple
+success or failure, but C<waiting> denotes the attempt still being in
+progress and so the calling program should continue to check back.
+
 =item check()
 
-Calls the check endpoint.  This can be used as a simple check that all of
-the integration arguments are correct and the client can authenticate to
-the Duo authentication API.  On success, it returns the current time on
-the Duo server in seconds since UNIX epoch.
+Calls the Duo C<check> endpoint.  This can be used as a simple check that
+all of the integration arguments are correct and the client can
+authenticate to the Duo authentication API.  On success, it returns the
+current time on the Duo server in seconds since UNIX epoch.
 
-=item sms_passcodes(userid)
+=item sms_passcodes(USERID)
 
-Calls the auth endpoint.  This will send the user the default number of
-passcodes via SMS, assuming the user has an SMS-capable phone set up.
-On success, it returns the status of the auth call.
+Calls the Duo C<auth> endpoint but without performing an authentication,
+just telling Duo to send a new batch of passcodes via SMS.  The user's
+first SMS-capable phone is used unconditionally.  On success, it returns
+the status of the call.
 
-=item validate_out_of_band(userid)
+=item validate_out_of_band(USERID)
 
-Calls the auth endpoint.  This requests an out-of-band user authentication
-attempt (Duo Push or phone call), that will require the user to respond
-on their phone or device.  On success of the request, it will return the
-transaction id for the auth attempt, that can then be validated via
-auth_status.
+Calls the Duo C<auth> endpoint and requests an asynchronous
+authentication.  This requests an out-of-band user authentication attempt
+(Duo Push or phone call), that will require the user to respond on their
+phone or device.  On success, it will return the transaction ID for the
+authentication attempt.  This can be used with auth_status() later to
+determine the final outcome of the authentication.
 
-=item validate_passcode(userid, passcode)
+=item validate_passcode(USERID, PASSCODE)
 
-Calls the auth endpoint.  This attempts to validate a passcode against a
-user account to see if the user can successfully log in.  On success, it
-returns the status of the authentication attempt from Duo.
-
-=item auth_status(transaction_id)
-
-Calls the auth_status endpoint.  This is used to check the current status
-of an auth attempt that cannot be immediately verified, such as a Duo Push
-or phone call.  On success, it returns the current result for the auth
-attempt.  'allow' or 'deny' are simple success or failure, but 'waiting'
-denotes the attempt still being in progress and so the calling program
-should continue to check back.
+Calls the Duo C<auth> endpoint.  This attempts to validate a passcode
+against a user account to see if the user can successfully log in.  On
+success, it returns the status of the authentication attempt from Duo.
 
 =back
 
