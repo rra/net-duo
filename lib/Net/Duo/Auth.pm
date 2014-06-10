@@ -53,10 +53,30 @@ sub sms_passcodes {
     return $result->{status};
 }
 
+# Validate an out-of-band method, such as Duo Push or a phone call.
+#
+# $self     - The Net::Duo::Auth object
+# $username - The username to attempt an auth for
+#
+# Returns: Transaction id, which can be checked on with auth_status
+#  Throws: Net::Duo::Exception on failure
+sub validate_out_of_band {
+    my ($self, $username) = @_;
+
+    my %auth = (username => $username,
+                factor   => 'auto',
+                device   => 'auto',
+                async    => 1,
+               );
+
+    my $result = $self->call_json('POST', '/auth/v2/auth', \%auth);
+    return $result->{txid};
+}
+
 # Validate a passcode given to us by a user.
 #
 # $self     - The Net::Duo::Auth object
-# $username - The username to send SMS passcodes to
+# $username - The username to check against
 # $passcode - The passcode given by the user
 #
 # Returns: Status of the auth.  Will be 'allow' on success.
@@ -71,6 +91,23 @@ sub validate_passcode {
 
     my $result = $self->call_json('POST', '/auth/v2/auth', \%auth);
     return $result->{status};
+}
+
+# Check on the current status of a user auth request that requires a user
+# response, such as a phone call or Duo Push.
+#
+# $self           - The Net::Duo::Auth object
+# $transaction_id - Transaction id for the auth, given at auth attempt
+#
+# Returns: Status of the auth.  Will be 'allow' on success.
+#  Throws: Net::Duo::Exception on failure
+sub auth_status {
+    my ($self, $transaction_id) = @_;
+
+    my %status = (txid => $transaction_id);
+
+    my $result = $self->call_json('GET', '/auth/v2/auth_status', \%status);
+    return $result->{result};
 }
 
 1;
@@ -139,6 +176,35 @@ Calls the check endpoint.  This can be used as a simple check that all of
 the integration arguments are correct and the client can authenticate to
 the Duo authentication API.  On success, it returns the current time on
 the Duo server in seconds since UNIX epoch.
+
+=item sms_passcodes(userid)
+
+Calls the auth endpoint.  This will send the user the default number of
+passcodes via SMS, assuming the user has an SMS-capable phone set up.
+On success, it returns the status of the auth call.
+
+=item validate_out_of_band(userid)
+
+Calls the auth endpoint.  This requests an out-of-band user authentication
+attempt (Duo Push or phone call), that will require the user to respond
+on their phone or device.  On success of the request, it will return the
+transaction id for the auth attempt, that can then be validated via
+auth_status.
+
+=item validate_passcode(userid, passcode)
+
+Calls the auth endpoint.  This attempts to validate a passcode against a
+user account to see if the user can successfully log in.  On success, it
+returns the status of the authentication attempt from Duo.
+
+=item auth_status(transaction_id)
+
+Calls the auth_status endpoint.  This is used to check the current status
+of an auth attempt that cannot be immediately verified, such as a Duo Push
+or phone call.  On success, it returns the current result for the auth
+attempt.  'allow' or 'deny' are simple success or failure, but 'waiting'
+denotes the attempt still being in progress and so the calling program
+should continue to check back.
 
 =back
 
