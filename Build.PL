@@ -50,7 +50,15 @@ my $build = Module::Build->new(
 
     # Other package relationships.
     configure_requires => { 'Module::Build' => 0.28 },
-    requires           => { perl            => '5.014' },
+    requires           => {
+        JSON              => 0,
+        'List::MoreUtils' => 0,
+        'LWP::UserAgent'  => '6.00',
+        'Perl6::Slurp'    => 0,
+        'Sub::Install'    => 0,
+        'URI::Escape'     => 0,
+        perl              => '5.014'
+    },
 );
 
 # Generate the build script.
