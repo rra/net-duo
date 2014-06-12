@@ -67,6 +67,33 @@ sub create {
     return $class->SUPER::create($duo, '/admin/v1/phones', $data_ref);
 }
 
+# Request an activation URL and barcode for a phone.
+#
+# $self     - The Net::Duo::Admin::Phone object to request activation URLs for
+# $args_ref - Arguments for the request (optional)
+#   install    - Set to a true value to request an install URL as well
+#   valid_secs - Time the URL will be valid in seconds
+#
+# Returns: A reference to a hash with the following possible keys
+#            activation_url     - Activation URL for this phone
+#            activation_barcode - Activation URL for QR code for this phone
+#            installation_url   - Install URL if one was requested
+#            valid_secs         - How long URLs will be valid
+#  Throws: Net::Duo::Exception on any problem getting activation URLs
+sub activation_url {
+    my ($self, $args_ref) = @_;
+    my %args = %{$args_ref};
+
+    # Canonicalize the install argument.
+    if (defined($args_ref) && defined($args_ref->{install})) {
+        $args{install} = $args{install} ? 1 : 0;
+    }
+
+    # Make the JSON call and return the results.
+    my $uri = "/admin/v1/phones/$self->{phone_id}/activation_url";
+    return $self->{_duo}->call_json('POST', $uri, \%args);
+}
+
 # Commit any changed data and refresh the object from Duo.
 #
 # $self - The Net::Duo::Admin::Phone object to commit changes for
@@ -92,6 +119,19 @@ sub delete {
     return;
 }
 ## use critic
+
+# Send a new batch of SMS passcodes to a phone.
+#
+# $self - The Net::Duo::Admin::Phone object to which to send SMS passcodes
+#
+# Returns: undef
+#  Throws: Net::Duo::Exception on any problem sending passcodes
+sub send_sms_passcodes {
+    my ($self) = @_;
+    my $uri = "/admin/v1/phones/$self->{phone_id}/send_sms_passcodes";
+    $self->{_duo}->call_json('POST', $uri);
+    return;
+}
 
 1;
 __END__
@@ -186,6 +226,56 @@ checking whether ID is a reference.
 
 =over 4
 
+=item activation_url([ARGS])
+
+Request activation URLs (and optionally an install URL) for this phone.
+ARGS is an optional reference to a hash whose keys should be chosen from
+the following:
+
+=over 4
+
+=item install
+
+If set to a true value, request an installation URL for this phone as well
+as the activation URLs.  This is a URL that, when opened, will prompt the
+user to install Duo Mobile.  The default is to not request an installation
+URL.
+
+=item valid_secs
+
+The number of seconds these activation URLs should be valid for.  The
+default is 86,400 (one day).
+
+=back
+
+The return value of this method will be a reference to a hash containing
+the following keys:
+
+=over 4
+
+=item activation_url
+
+Opening this URL with the Duo Mobile app will complete activation.
+
+=item activation_barcode
+
+URL of an image that can be scanned with Duo Mobile to complete
+activation.  Activating with this image or with the activation URL will
+produce the same result.
+
+=item installation_url
+
+Opening this URL on the phone will prompt the user to install Duo Mobile.
+This will only be present if the install argument is set to a true value.
+
+=item valid_secs
+
+The number of seconds that the activation code is valid for.  Normally
+this will be the same as the valid_secs argument in the request if it was
+present, unless Duo rejected the requested validity interval.
+
+=back
+
 =item commit()
 
 Commit all changes made via the set_*() methods to Duo.  Until this method
@@ -206,6 +296,12 @@ overwritten by whatever is currently in Duo, if it is different.
 Delete this phone from Duo.  After successful completion of this call, the
 Net::Duo::Admin::Phone object should be considered read-only, since no
 further changes to the object can be meaningfully sent to Duo.
+
+=item send_sms_passcodes()
+
+Generate a new batch of SMS passcodes and send them to the phone in a
+single SMS message.  The number of passcodes sent is a global setting on
+the Duo account.
 
 =back
 

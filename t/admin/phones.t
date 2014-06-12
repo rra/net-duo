@@ -86,10 +86,11 @@ $data = {
     predelay  => '5',
     type      => 'mobile',
 };
+my $id = $expected->{phone_id};
 $mock->expect(
     {
         method        => 'POST',
-        uri           => "/admin/v1/phones/$expected->{phone_id}",
+        uri           => "/admin/v1/phones/$id",
         content       => $data,
         response_file => 't/data/responses/phone-create.json',
     }
@@ -108,7 +109,7 @@ $data = { name => 'Updated phone name' };
 $mock->expect(
     {
         method        => 'POST',
-        uri           => "/admin/v1/phones/$expected->{phone_id}",
+        uri           => "/admin/v1/phones/$id",
         content       => $data,
         response_file => 't/data/responses/phone-create.json',
     }
@@ -122,19 +123,62 @@ is_admin_phone($phone, $expected);
 $mock->expect(
     {
         method        => 'GET',
-        uri           => "/admin/v1/phones/$expected->{phone_id}",
+        uri           => "/admin/v1/phones/$id",
         response_file => 't/data/responses/phone-create.json',
     }
 );
 note('Testing phone creation by ID');
-$phone = Net::Duo::Admin::Phone->new($duo, $expected->{phone_id});
+$phone = Net::Duo::Admin::Phone->new($duo, $id);
 is_admin_phone($phone, $expected);
+
+# Send SMS passcodes to the phone.
+$mock->expect(
+    {
+        method        => 'POST',
+        uri           => "/admin/v1/phones/$id/send_sms_passcodes",
+        response_data => q{},
+    }
+);
+note('Testing sending SMS passcodes');
+$phone->send_sms_passcodes;
+
+# Create an activation code for the phone.
+$data = {
+    activation_url     => 'https://example.com/iphone/7d3J4RLs',
+    activation_barcode => 'https://example.com/frame/qr?value=duo%3A%2F%2Fat',
+    valid_secs         => 3600,
+};
+$mock->expect(
+    {
+        method        => 'POST',
+        uri           => "/admin/v1/phones/$id/activation_url",
+        content       => { valid_secs => 3600 },
+        response_data => $data,
+    }
+);
+note('Testing activation URL without install URL');
+my $activation = $phone->activation_url({ valid_secs => 3600 });
+is_deeply($activation, $data, 'Phone activation data');
+
+# Try the same but also requesting an installation_url.
+$data->{installation_url} = 'https://example.com/installduo';
+$mock->expect(
+    {
+        method        => 'POST',
+        uri           => "/admin/v1/phones/$id/activation_url",
+        content       => { install => 1, valid_secs => 3600 },
+        response_data => $data,
+    }
+);
+note('Testing activation URL with install URL');
+$activation = $phone->activation_url({ install => 1, valid_secs => 3600 });
+is_deeply($activation, $data, 'Phone activation data');
 
 # Delete that phone.
 $mock->expect(
     {
         method        => 'DELETE',
-        uri           => "/admin/v1/phones/$expected->{phone_id}",
+        uri           => "/admin/v1/phones/$id",
         response_data => q{},
     }
 );

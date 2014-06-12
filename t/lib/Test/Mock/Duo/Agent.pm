@@ -107,7 +107,7 @@ sub request {
             $content = q{};
         }
     } else {
-        $content = $request->content;
+        $content = $request->content // q{};
     }
     is($uri, $self->{expected}{uri}, 'URI');
 
