@@ -76,6 +76,9 @@ my $raw      = slurp('t/data/responses/token-create.json');
 my $expected = $json->decode($raw);
 is_admin_token($token, $expected);
 
+# Convert the full token to JSON and compare that with the expected JSON.
+is_deeply($json->decode($token->json), $expected, 'Full JSON output');
+
 # Delete that token.
 $mock->expect(
     {

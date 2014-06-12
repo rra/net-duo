@@ -87,6 +87,9 @@ my $raw      = slurp('t/data/responses/group-create.json');
 my $expected = $json->decode($raw);
 is_admin_group($group, $expected);
 
+# Convert the full group to JSON and compare that with the expected JSON.
+is_deeply($json->decode($group->json), $expected, 'Full JSON output');
+
 # Delete that group.
 $mock->expect(
     {

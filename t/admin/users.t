@@ -89,6 +89,9 @@ $raw      = slurp('t/data/responses/user.json');
 $expected = $json->decode($raw)->[0];
 is_admin_user($user, $expected);
 
+# Convert the full user to JSON and compare that with the expected JSON.
+is_deeply($json->decode($user->json), $expected, 'Full JSON output');
+
 # Remove the first phone from that user.
 my $user_id  = $user->user_id;
 my $phone    = ($user->phones)[0];

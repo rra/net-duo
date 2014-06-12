@@ -297,6 +297,15 @@ Delete this phone from Duo.  After successful completion of this call, the
 Net::Duo::Admin::Phone object should be considered read-only, since no
 further changes to the object can be meaningfully sent to Duo.
 
+=item json()
+
+Convert the data stored in the object to JSON and return the results.  The
+resulting JSON should match the JSON that one would get back from the Duo
+web service when retrieving the same object (plus any changes made locally
+to the object via set_*() methods).  This is primarily intended for
+debugging dumps or for passing Duo objects to other systems via further
+JSON APIs.
+
 =item send_sms_passcodes()
 
 Generate a new batch of SMS passcodes and send them to the phone in a

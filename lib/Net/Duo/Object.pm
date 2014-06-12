@@ -61,7 +61,9 @@ sub _convert_data {
 
     # Make a deep copy of the data following the field specification.
     my %result;
+  FIELD:
     for my $field (keys %{$fields}) {
+        next FIELD if (!exists($data_ref->{$field}));
         my $type  = _field_type($fields->{$field});
         my $value = $data_ref->{$field};
         if ($type eq 'simple') {
@@ -255,11 +257,51 @@ sub install_accessors {
     return;
 }
 
+# Returns the current contents of the object as JSON.  The json() method of
+# nested objects is called to convert them in turn.
+#
+# $self - The object to convert to JSON
+#
+# Returns: JSON representation of the object using the Duo data model
+sub json {
+    my ($self) = @_;
+
+    # Create a JSON encoder and decoder.
+    my $json = JSON->new->utf8(1);
+
+    # Retrieve the field specification for this object.
+    my $fields = $self->_fields;
+
+    # Iterate through the fields to build the data structure we'll convert to
+    # JSON.  We have to do some data mapping and call the json() method on any
+    # embedded objects.  This is unnecessarily inefficient since it converts
+    # the children to JSON and then back again, purely for coding convenience.
+    my %data;
+  FIELD:
+    for my $field (keys %{$self}) {
+        next FIELD if ($field =~ m{ \A _ }xms);
+        my ($type, $flags) = _field_type($fields->{$field});
+        if ($type eq 'simple' || $type eq 'array') {
+            if ($flags->{boolean}) {
+                $data{$field} = $self->{$field} ? 'true' : 'false';
+            } else {
+                $data{$field} = $self->{$field};
+            }
+        } else {
+            my @children = map { $_->json } @{ $self->{$field} // [] };
+            $data{$field} = [map { $json->decode($_) } @children];
+        }
+    }
+
+    # Convert the result to JSON and return it.
+    return $json->encode(\%data);
+}
+
 1;
 __END__
 
 =for stopwords
-Allbery undef MERCHANTABILITY NONINFRINGEMENT sublicense getters
+Allbery undef MERCHANTABILITY NONINFRINGEMENT sublicense getters JSON
 
 =head1 NAME
 
@@ -405,6 +447,15 @@ changed other, unrelated fields in the object.
 It's best to think of this method as a synchronize operation: changed data
 is written back, overwriting what's in Duo, and unchanged data may be
 overwritten by whatever is currently in Duo, if it is different.
+
+=item json()
+
+Convert the data stored in the object to JSON and return the results.  The
+resulting JSON should match the JSON that one would get back from the Duo
+web service when retrieving the same object (plus any changes made locally
+to the object via set_*() methods).  This is primarily intended for
+debugging dumps or for passing Duo objects to other systems via further
+JSON APIs.
 
 =back
 

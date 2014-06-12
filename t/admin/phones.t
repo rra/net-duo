@@ -74,6 +74,9 @@ my $raw      = slurp('t/data/responses/phone-create.json');
 my $expected = $json->decode($raw);
 is_admin_phone($phone, $expected);
 
+# Convert the full phone to JSON and compare that with the expected JSON.
+is_deeply($json->decode($phone->json), $expected, 'Full JSON output');
+
 # Test a phone update.  First, we'll do an update with every field that's
 # possible to change.  When we commit, all the fields should revert since we
 # refresh from the server's view.
