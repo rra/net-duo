@@ -13,8 +13,6 @@ lib/Net/Duo/Object.pm
 LICENSE
 MANIFEST			This list of files
 MANIFEST.SKIP
-META.json
-META.yml
 README
 t/admin/groups.t
 t/admin/phones.t
