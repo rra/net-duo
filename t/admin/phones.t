@@ -118,6 +118,18 @@ $phone->set_name('Updated phone name');
 $phone->commit;
 is_admin_phone($phone, $expected);
 
+# Retrieve a phone by ID.
+$mock->expect(
+    {
+        method        => 'GET',
+        uri           => "/admin/v1/phones/$expected->{phone_id}",
+        response_file => 't/data/responses/phone-create.json',
+    }
+);
+note('Testing phone creation by ID');
+$phone = Net::Duo::Admin::Phone->new($duo, $expected->{phone_id});
+is_admin_phone($phone, $expected);
+
 # Delete that phone.
 $mock->expect(
     {
