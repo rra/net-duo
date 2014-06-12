@@ -1,4 +1,4 @@
-# Mock LWP::UserAgent for Duo testing.
+# Mock LWP::UserAgent for Net::Duo testing.
 #
 # This module provides the same interface as LWP::UserAgent, for the methods
 # that Net::Duo calls, and verifies that the information passed in by Duo is
@@ -186,7 +186,7 @@ sub expect {
 
     # Set the expected information for call verification later.
     $self->{expected} = {
-        method   => $args_ref->{method},
+        method   => uc($args_ref->{method}),
         uri      => 'https://' . $self->{api_hostname} . $args_ref->{uri},
         content  => $args_ref->{content},
         response => $response,
@@ -196,3 +196,170 @@ sub expect {
 
 1;
 __END__
+
+=for stopwords
+Allbery JSON URI CPAN ARGS API uri hostname sublicense MERCHANTABILITY
+NONINFRINGEMENT
+
+=head1 NAME
+
+Test::Mock::Duo::Agent - Mock LWP::UserAgent for Net::Duo testing
+
+=head1 SYNOPSIS
+
+    # Build the Net::Duo object and the mock.
+    my %args = (key_file => 'admin.json');
+    my $mock = Test::Mock::Duo::Agent->new(\%args);
+    $args{user_agent} = $mock;
+    my $duo = Net::Duo::Admin->new(\%args);
+
+    # Indicate what to expect and then make the Net::Duo call.
+    $mock->expect(
+        {
+            method        => 'GET',
+            uri           => '/admin/v1/users',
+            response_file => 'response.json',
+        }
+    );
+    my @users = $duo->users;
+
+=head1 REQUIREMENTS
+
+Perl 5.14 or later and the modules HTTP::Request and HTTP::Response (part
+of HTTP::Message), JSON, Perl6::Slurp, and URI::Encode (part of URI), all
+of which are available from CPAN.
+
+=head1 DESCRIPTION
+
+This module provides the same interface as LWP::UserAgent, for the methods
+that Net::Duo calls, and verifies that the information passed in by Duo is
+correct.  It can also simulate responses to exercise response handling in
+Net::Duo.  To test Net::Duo, pass a Test::Mock::Duo::Agent object to the
+constructor of a Net::Duo-based class as the user_agent argument.
+
+All tests are reported by Test::More, and no effort is made to produce a
+predictable number of test results.  This means that any calling test
+program should probably not specify a plan and instead use done_testing().
+
+=head1 CLASS METHODS
+
+=over 4
+
+=item new(ARGS)
+
+Create a new Test::Mock::Duo::Agent object.  ARGS should be the same data
+structure passed to the Net::Duo-derived constructor (with the obvious
+exception of the user_agent argument, which is ignored).
+
+=back
+
+=head1 INSTANCE METHODS
+
+=over 4
+
+=item expect(ARGS)
+
+Expect a REST API call from Net::Duo.
+
+ARGS is used to specify both the expected request data and the response
+to return to the caller.  The same response is returned regardless of
+whether the request is correct.
+
+There are two ways to specify the response: a complete HTTP::Response
+object, or the JSON data of the response.  If only the JSON data is
+specified, the request will return a response with a status code of 200
+and a Duo success result (C<stat> of C<OK>), with the supplied JSON data
+as the C<response> key in the JSON response data.  The content will have
+a Content-Type of C<application/json>.
+
+ARGS should be a reference to a hash with keys selected from the
+following:
+
+=over 4
+
+=item method
+
+The expected method of the request.
+
+=item uri
+
+The expected URI of the request.  This should just be the path, not the
+hostname or protocol portions of the full URL, and should not include any
+GET parameters.
+
+=item content
+
+The expected content of the request.  This is the parameters in the URL
+if the method is GET and the expected C<application/x-www-form-urlencoded>
+content of the request for any other request type.  It may be empty or not
+specified if the request should not contain any additional parameters.
+
+=item response
+
+An HTTP::Response object to return to the client.  This object is always
+returned without modification to any request, even if it doesn't match the
+expected request.
+
+=item response_data
+
+A data structure that will be converted to JSON and included as the value
+of the C<response> key in the returned success response to the client.
+
+=item response_file
+
+A file containing JSON that will be included as the value of the
+C<response> key in the returned success response to the client.
+
+=back
+
+=item request(REQUEST)
+
+This is the interface called internally by Net::Duo to make an API call.
+The interface is the same as the request() method of LWP::UserAgent:
+REQUEST is an HTTP::Request object, and Test::Mock::Duo::Agent will return
+an HTTP::Response object.  Currently, this is the only LWP::UserAgent
+method implemented by this mock, since it's the only one that Net::Duo
+uses.
+
+When request() is called, it checks the content of the request against
+whatever the mock was told to expect via the expect() method.  The results
+of that comparison are reported via Test::More functions.  The expected
+call is then cleared.  This means that expect() must be called between
+each call to a Net::Duo method that would result in a REST API call
+request.
+
+If request() is called when no request was expected (via an expect() call),
+it throws an exception.
+
+=head1 AUTHOR
+
+Russ Allbery <rra@cpan.org>
+
+=head1 COPYRIGHT AND LICENSE
+
+Copyright 2014 The Board of Trustees of the Leland Stanford Junior
+University
+
+Permission is hereby granted, free of charge, to any person obtaining a
+copy of this software and associated documentation files (the "Software"),
+to deal in the Software without restriction, including without limitation
+the rights to use, copy, modify, merge, publish, distribute, sublicense,
+and/or sell copies of the Software, and to permit persons to whom the
+Software is furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL
+THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+DEALINGS IN THE SOFTWARE.
+
+=head1 SEE ALSO
+
+L<Net::Duo>
+
+=cut
