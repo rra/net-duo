@@ -16,6 +16,7 @@ use strict;
 use warnings;
 
 use Carp qw(croak);
+use Digest::SHA qw(hmac_sha1_hex);
 use Encode qw(decode);
 use HTTP::Request;
 use HTTP::Response;
@@ -28,9 +29,48 @@ use URI::Escape qw(uri_unescape);
 # Mock API
 ##############################################################################
 
-# Stubbed out for now.
+# Verify the signature on the request.
+#
+# The signature uses the Basic Authentication Scheme and should use the
+# integration key as the username and the hash of the call as the password.
+# This function duplicates the signature and ensures it's correct.  All test
+# results are reported via Test::More functions.
+#
+# $self    - Test::Mock::Duo::Agent object
+# $request - HTTP::Request object to verify
+#
+# Returns: undef
 sub _verify_signature {
     my ($self, $request) = @_;
+    my $date   = $request->header('Date');
+    my $method = uc($request->method);
+    my $host   = $self->{api_hostname};
+
+    # Get the partial URI.  We have to strip the scheme and hostname back off
+    # of it again.  Verify the scheme and hostname while we're at it.
+    my $uri = URI->new($request->uri);
+    is($uri->scheme, 'https', 'Scheme');
+    is($uri->host,   $host,   'Hostname');
+    my $path = $uri->path;
+
+    # Get the username and "password" (actually the hash).  Verify the
+    # username.
+    my ($username, $password) = $request->authorization_basic;
+    is($username, $self->{integration_key}, 'Username');
+
+    # If there is request data, sort it for signing purposes.
+    my $args;
+    if ($method eq 'GET') {
+        $args = $uri->query // q{};
+    } else {
+        $args = $request->content // q{};
+    }
+    $args = join(q{&}, sort(split(m{&}xms, $args)));
+
+    # Generate the hash of the request and check it.
+    my $data = join("\n", $date, $method, $host, $path, $args);
+    my $signature = hmac_sha1_hex($data, $self->{secret_key});
+    is($password, $signature, 'Signature');
     return;
 }
 
