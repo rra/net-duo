@@ -41,6 +41,46 @@ sub _field_type {
     return wantarray ? ($type, { map { $_ => 1 } @flags }) : $type;
 }
 
+# Helper function to do the data translation from the results of JSON parsing
+# to our internal representation.  This mostly consists of converting nested
+# objects into proper objects, but it also makes a deep copy of the data.
+#
+# This is broken into a separate function so that it can be used by both new()
+# and commit().
+#
+# $self     - Class of object we're creating or an object of the right type
+# $data_ref - Reference to parsed data from JSON
+# $duo      - Net::Duo object to use for subobjects
+#
+# Returns: Reference to hash suitable for blessing as an object
+sub _convert_data {
+    my ($self, $data_ref, $duo) = @_;
+
+    # Retrieve the field specification for this object.
+    my $fields = $self->_fields;
+
+    # Make a deep copy of the data following the field specification.
+    my %result;
+    for my $field (keys %{$fields}) {
+        my $type  = _field_type($fields->{$field});
+        my $value = $data_ref->{$field};
+        if ($type eq 'simple') {
+            $result{$field} = $value;
+        } elsif ($type eq 'array') {
+            $result{$field} = [@{$value}];
+        } elsif (defined($value)) {
+            my @objects;
+            for my $object (@{$value}) {
+                push(@objects, $type->new($duo, $object));
+            }
+            $result{$field} = \@objects;
+        }
+    }
+
+    # Return the new data structure.
+    return \%result;
+}
+
 # Create a new Net::Duo object.  This constructor can be inherited by all
 # object classes.  It takes the decoded JSON and uses the field specification
 # for the object to construct an object via deep copying.
@@ -55,29 +95,8 @@ sub _field_type {
 # Returns: Newly-created object
 sub new {
     my ($class, $duo, $data_ref) = @_;
-
-    # Retrieve the field specification for this object.
-    my $fields = $class->_fields;
-
-    # Make a deep copy of the data following the field specification.
-    my $self = { _duo => $duo };
-    for my $field (keys %{$fields}) {
-        my $type  = _field_type($fields->{$field});
-        my $value = $data_ref->{$field};
-        if ($type eq 'simple') {
-            $self->{$field} = $value;
-        } elsif ($type eq 'array') {
-            $self->{$field} = [@{$value}];
-        } elsif (defined($value)) {
-            my @objects;
-            for my $object (@{$value}) {
-                push(@objects, $type->new($duo, $object));
-            }
-            $self->{$field} = \@objects;
-        }
-    }
-
-    # Bless and return the new object.
+    my $self = $class->_convert_data($data_ref, $duo);
+    $self->{_duo} = $duo;
     bless($self, $class);
     return $self;
 }
@@ -125,6 +144,55 @@ sub create {
     return $self;
 }
 
+# Commit changes to the object to Duo.  This method must be overridden by
+# subclasses to pass in the additional URI parameter for the Duo API endpoint.
+# It sends all of the fields that have been modified by setters, and then
+# clears the flags that track modifications if the commit was successful.
+#
+# The child class must provide a static method fields() that returns a field
+# specification.  See the documentation for more details.
+#
+# $self - Subclass of Net::Duo::Object
+# $uri  - Duo endpoint to use for updates
+#
+# Returns: undef
+#  Throws: Net::Duo::Exception on any problem modifying the object in Duo
+sub commit {
+    my ($self, $uri) = @_;
+
+    # Retrieve the field specification for this object.
+    my $fields = $self->_fields;
+
+    # Iterate through the changed fields to build the data for Duo.  Remap
+    # boolean fields to true or false here.
+    my %data;
+    for my $field (keys %{ $self->{_changed} }) {
+        my ($type, $flags) = _field_type($fields->{$field});
+        if ($flags->{boolean}) {
+            $data{$field} = $self->{$field} ? 'true' : 'false';
+        } else {
+            $data{$field} = $self->{$field};
+        }
+    }
+
+    # Modify the object in Duo.  Duo will return the resulting new object,
+    # which we want to convert back to our internal representation.
+    my $new_data_ref = $self->{_duo}->call_json('POST', $uri, \%data);
+    $new_data_ref = $self->_convert_data($new_data_ref, $self->{_duo});
+
+    # Duo may have changed or canonicalized the data, or someone else may have
+    # changed other parts of the object, so replace all of our data with what
+    # Duo now says the object looks like.  Save our private fields.  This is
+    # more extensible than having a whitelist of private fields.
+    delete $self->{_changed};
+    for my $field (keys %{$self}) {
+        next if ($field !~ m{ \A _ }xms);
+        $new_data_ref->{$field} = $self->{$field};
+    }
+    %{$self} = %{$new_data_ref};
+    return;
+}
+
 # Create all the accessor methods for the object fields.  This method is
 # normally called via code outside of any method in the object class so that
 # it is run when the class is first imported.
@@ -143,7 +211,7 @@ sub install_accessors {
 
     # Create an accessor for each one.
     for my $field (keys %{$fields}) {
-        my $type = _field_type($fields->{$field});
+        my ($type, $flags) = _field_type($fields->{$field});
 
         # For fields containing arrays, return a copy of the array instead
         # of the reference to the internal data structure in the object,
@@ -162,6 +230,27 @@ sub install_accessors {
         # Create and install the accessor.
         my $spec = { code => $code, into => $class, as => $field };
         Sub::Install::install_sub($spec);
+
+        # If the "set" flag is set, also generate a setter.
+        if ($flags->{set}) {
+            if ($type eq 'simple') {
+                $code = sub {
+                    my ($self, $value) = @_;
+                    $self->{$field} = $value;
+                    $self->{_changed}{$field} = 1;
+                    return;
+                };
+            } else {
+                $code = sub {
+                    my ($self, @values) = @_;
+                    $self->{$field} = [@values];
+                    $self->{_changed}{$field} = 1;
+                    return;
+                };
+            }
+            $spec = { code => $code, into => $class, as => "set_$field" };
+            Sub::Install::install_sub($spec);
+        }
     }
     return;
 }
@@ -258,6 +347,14 @@ The flags must be chosen from the following:
 This is a boolean field.  Convert all values to C<true> or C<false> before
 sending the data to Duo.  Only makes sense with a field of type C<simple>.
 
+=item C<set>
+
+Generate a setter for this field.  install_accessors() will, in addition
+to adding a method to retrieve the value, will add a method named after
+the field but prefixed with C<set_> that will set the value of that field
+and remember that it's been changed locally.  Changed fields will then
+be pushed back to Duo via the commit() method.
+
 =back
 
 =head1 CLASS METHODS
@@ -286,6 +383,28 @@ reference to a hash, which contains the data for an object of the class
 being constructed.  Using the field specification for that class, the data
 will be copied out of the object into a Perl data structure, converting
 nested objects to other Net::Duo objects as required.
+
+=back
+
+=head1 INSTANCE METHODS
+
+=over 4
+
+=item commit(URI)
+
+A general method for committing changes to an object to Duo.  Takes the URI
+of the REST endpoint for object modification.  This method should be
+overridden by subclasses to provide the URI and only expose an
+argument-less method.
+
+After commit(), the internal representation of the object will be refreshed
+to match the new data returned by the Duo API for that object.  Therefore,
+other fields of the object may change after commit() if some other user has
+changed other, unrelated fields in the object.
+
+It's best to think of this method as a synchronize operation: changed data
+is written back, overwriting what's in Duo, and unchanged data may be
+overwritten by whatever is currently in Duo, if it is different.
 
 =back
 

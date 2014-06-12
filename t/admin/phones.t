@@ -74,6 +74,50 @@ my $raw      = slurp('t/data/responses/phone-create.json');
 my $expected = $json->decode($raw);
 is_admin_phone($phone, $expected);
 
+# Test a phone update.  First, we'll do an update with every field that's
+# possible to change.  When we commit, all the fields should revert since we
+# refresh from the server's view.
+$data = {
+    extension => '71351',
+    name      => 'Updated phone name',
+    number    => '+15555551910',
+    platform  => 'Generic Smartphone',
+    postdelay => '1',
+    predelay  => '5',
+    type      => 'mobile',
+};
+$mock->expect(
+    {
+        method        => 'POST',
+        uri           => "/admin/v1/phones/$expected->{phone_id}",
+        content       => $data,
+        response_file => 't/data/responses/phone-create.json',
+    }
+);
+note('Testing phone modification with all data');
+for my $field (sort keys %{$data}) {
+    my $method = "set_$field";
+    $phone->$method($data->{$field});
+    is($phone->$field, $data->{$field}, "set_$field changes data");
+}
+$phone->commit;
+is_admin_phone($phone, $expected);
+
+# Now test a phone update with only one change.
+$data = { name => 'Updated phone name' };
+$mock->expect(
+    {
+        method        => 'POST',
+        uri           => "/admin/v1/phones/$expected->{phone_id}",
+        content       => $data,
+        response_file => 't/data/responses/phone-create.json',
+    }
+);
+note('Testing phone modification with one field');
+$phone->set_name('Updated phone name');
+$phone->commit;
+is_admin_phone($phone, $expected);
+
 # Delete that phone.
 $mock->expect(
     {
