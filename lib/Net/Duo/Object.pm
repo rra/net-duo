@@ -17,7 +17,6 @@ use strict;
 use warnings;
 
 use Carp qw(croak);
-use List::MoreUtils qw(any);
 use Sub::Install;
 
 # Helper function to parse the data for a particular field specification.
@@ -25,7 +24,7 @@ use Sub::Install;
 # $spec - The field specification (a value in the hash from _fields)
 #
 # Returns: The type in scalar context
-#          The type and then any flags in array context
+#          The type and then a reference to a hash of flags in array context
 sub _field_type {
     my ($spec) = @_;
     my ($type, @flags);
@@ -39,7 +38,7 @@ sub _field_type {
     }
 
     # Return the appropriate value or values.
-    return wantarray ? ($type, @flags) : $type;
+    return wantarray ? ($type, { map { $_ => 1 } @flags }) : $type;
 }
 
 # Create a new Net::Duo object.  This constructor can be inherited by all
@@ -109,8 +108,8 @@ sub create {
     my %data = %{$data_ref};
   FIELD:
     for my $field (keys %{$fields}) {
-        my ($type, @flags) = _field_type($fields->{$field});
-        if (any { $_ eq 'boolean' } @flags) {
+        my ($type, $flags) = _field_type($fields->{$field});
+        if ($flags->{boolean}) {
             $data{$field} = $data{$field} ? 'true' : 'false';
         }
     }
@@ -196,8 +195,8 @@ Net::Duo::Object - Helper base class for Duo objects
 
 =head1 REQUIREMENTS
 
-Perl 5.14 or later and the modules List::MoreUtils and Sub::Install, which
-are available from CPAN.
+Perl 5.14 or later and the module Sub::Install, which is available from
+CPAN.
 
 =head1 DESCRIPTION
 

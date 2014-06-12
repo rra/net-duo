@@ -45,7 +45,6 @@ REQUIREMENTS
 
       JSON
       HTTP::Request (part of HTTP::Message)
-      List::MoreUtils
       LWP::UserAgent 6.00 or later (part of libwww-perl)
       Perl6::Slurp
       Sub::Install
