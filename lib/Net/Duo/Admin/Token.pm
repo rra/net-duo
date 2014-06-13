@@ -29,6 +29,23 @@ sub _fields {
 # Install our accessors.
 Net::Duo::Admin::Token->install_accessors;
 
+# Override the new method to support creating a token from an ID instead
+# of decoded JSON data.
+#
+# $class      - Class of object to create
+# $duo        - Net::Duo object to use to create the object
+# $id_or_data - Token ID or reference to data
+#
+# Returns: Newly-created object
+#  Throws: Net::Duo::Exception on any problem creating the object
+sub new {
+    my ($class, $duo, $id_or_data) = @_;
+    if (!ref($id_or_data)) {
+        $id_or_data = $duo->call_json('GET', "/admin/v1/tokens/$id_or_data");
+    }
+    return $class->SUPER::new($duo, $id_or_data);
+}
+
 # Override the create method to add the appropriate URI.
 #
 # $class    - Class of object to create
