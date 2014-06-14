@@ -1,4 +1,7 @@
 #!/usr/bin/make -f
 
+# Enable Perl tests that should run during automated testing.
+export AUTOMATED_TESTING = 1
+
 %:
 	dh $@
