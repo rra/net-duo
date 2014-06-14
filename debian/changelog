@@ -1,0 +1,6 @@
+libafs-pag-perl (1.00~alpha1-1) unstable; urgency=medium
+
+  * Internal Stanford-only release for early testing.
+
+ -- Russ Allbery <rra@debian.org>  Fri, 13 Jun 2014 19:38:48 -0700
+

@@ -1,0 +1,26 @@
+Source: libnet-duo-perl
+Section: perl
+Priority: optional
+Build-Depends: debhelper (>= 9), libjson-perl, libmodule-build-perl,
+ libperl6-slurp-perl, libsub-install-perl, libtest-minimumversion-perl,
+ libtest-pod-perl, libtest-pod-coverage-perl, libtest-strict-perl,
+ libtest-synopsis-perl, liburi-perl, libwww-perl
+Maintainer: Russ Allbery <rra@debian.org>
+Standards-Version: 3.9.5
+Homepage: http://www.eyrie.org/~eagle/software/net-duo/
+Vcs-Git: git://git.eyrie.org/perl/net-duo.git -b debian
+Vcs-Browser: http://git.eyrie.org/?p=perl/net-duo.git
+
+Package: libnet-duo-perl
+Architecture: all
+Depends: ${perl:Depends}, ${shlibs:Depends}, ${misc:Depends},
+ libjson-perl, libperl6-slurp-perl, libsub-install-perl, liburi-perl,
+ libwww-perl
+Description: Perl API for Duo multifactor authentication service
+ Net::Duo provides an object-oriented Perl interface for the Duo Security
+ REST APIs.  It attempts to abstract some of the API details and provide
+ an object-oriented view of the returned objects in order to make use of
+ the API in Perl code more natural than dealing with JSON data structures
+ directly.  Currently, some parts of the Auth and Admin APIs are
+ implemented alongside with generic methods to call any of the JSON-based
+ APIs.
