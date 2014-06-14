@@ -152,6 +152,14 @@ the Net::Duo object that should be used for any further actions on this
 object.  DATA should be the data structure returned by the Duo REST API
 for a single user, after JSON decoding.
 
+=item new(DUO, ID)
+
+Creates a new Net::Duo::Admin::Token by ID.  DUO is the Net::Duo object
+that is used to retrieve the token from Duo and will be used for any
+subsequent operations.  The ID should be the Duo identifier of the token.
+This constructor is distinguished from the previous constructor by
+checking whether ID is a reference.
+
 =back
 
 =head1 INSTANCE ACTION METHODS
