@@ -128,10 +128,12 @@ sub create {
     # Make a copy of the data and convert all boolean values.
     my %data = %{$data_ref};
   FIELD:
-    for my $field (keys %{$fields}) {
+    for my $field (keys %data) {
         my ($type, $flags) = _field_type($fields->{$field});
         if ($flags->{boolean}) {
             $data{$field} = $data{$field} ? 'true' : 'false';
+        } elsif ($flags->{zero_or_one}) {
+            $data{$field} = $data{$field} ? 1 : 0;
         }
     }
 
@@ -172,6 +174,8 @@ sub commit {
         my ($type, $flags) = _field_type($fields->{$field});
         if ($flags->{boolean}) {
             $data{$field} = $self->{$field} ? 'true' : 'false';
+        } elsif ($flags->{zero_or_one}) {
+            $data{$field} = $self->{$field} ? 1 : 0;
         } else {
             $data{$field} = $self->{$field};
         }
@@ -284,6 +288,8 @@ sub json {
         if ($type eq 'simple' || $type eq 'array') {
             if ($flags->{boolean}) {
                 $data{$field} = $self->{$field} ? 'true' : 'false';
+            } elsif ($flags->{zero_or_one}) {
+                $data{$field} = $self->{$field} ? 1 : 0;
             } else {
                 $data{$field} = $self->{$field};
             }
@@ -396,6 +402,12 @@ to adding a method to retrieve the value, will add a method named after
 the field but prefixed with C<set_> that will set the value of that field
 and remember that it's been changed locally.  Changed fields will then
 be pushed back to Duo via the commit() method.
+
+=item C<zero_or_one>
+
+This is a boolean field that wants values of 0 or 1.  Convert all values
+to C<1> or C<0> before sending the data to Duo.  Only makes sense with a
+field of type C<simple>.
 
 =back
 

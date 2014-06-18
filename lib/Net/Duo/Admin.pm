@@ -15,11 +15,34 @@ use warnings;
 
 use parent qw(Net::Duo);
 
+use Net::Duo::Admin::Integration;
 use Net::Duo::Admin::User;
 
 ##############################################################################
 # Admin API methods
 ##############################################################################
+
+# Retrieve all integrations associated with a Duo account.
+#
+# $self - The Net::Duo::Admin object
+#
+# Returns: List of Net::Duo::Admin::Integration objects
+#  Throws: Net::Duo::Exception on failure
+sub integrations {
+    my ($self) = @_;
+
+    # Make the Duo call and get the decoded result.
+    my $result = $self->call_json('GET', '/admin/v1/integrations');
+
+    # Convert the returned integrations into Net::Duo::Admin::Integration
+    # objects.
+    my @integrations;
+    for my $integration (@{$result}) {
+        my $object = Net::Duo::Admin::Integration->new($self, $integration);
+        push(@integrations, $object);
+    }
+    return @integrations;
+}
 
 # Retrieve a single user by username.  An empty reply indicates that no user
 # by that username exists.
@@ -133,6 +156,13 @@ documentation of the possible arguments.
 =head1 INSTANCE METHODS
 
 =over 4
+
+=item integrations()
+
+Retrieves all the integrations currently present in this Duo account and
+returns them as a list of Net::Duo::Admin::Integration objects.  Be aware
+that this list may be quite long if the Duo account supports many
+integrations, and the entire list is read into memory.
 
 =item user(USERNAME)
 
