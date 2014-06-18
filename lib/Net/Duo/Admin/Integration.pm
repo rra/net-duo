@@ -94,7 +94,7 @@ sub delete {
 __END__
 
 =for stopwords
-Allbery MERCHANTABILITY NONINFRINGEMENT
+Allbery MERCHANTABILITY NONINFRINGEMENT CIDR CSV integrations sublicense
 
 =head1 NAME
 
@@ -155,7 +155,7 @@ to false.
 =item adminapis_read_resource
 
 Only valid for integrations of type C<adminapi>.  Set to a true value to
-grant permission to use all Admin API methods that retreive objects such
+grant permission to use all Admin API methods that retrieve objects such
 as users, phones, and hardware tokens.  Setting this key does not grant
 permission to change those objects or create new ones.  Optional and
 defaults to false.
@@ -250,11 +250,12 @@ used internally by other Net::Duo::Admin methods.
 
 =item new(DUO, KEY)
 
-Creates a new Net::Duo::Admin::Integration object from the integratin key.
-DUO is the Net::Duo object that is used to retrieve the integration from
-Duo and will be used for any subsequent operations.  The KEY should be the
-integration key of the integration.  This constructor is distinguished
-from the previous constructor by checking whether KEY is a reference.
+Creates a new Net::Duo::Admin::Integration object from the integration
+key.  DUO is the Net::Duo object that is used to retrieve the integration
+from Duo and will be used for any subsequent operations.  The KEY should
+be the integration key of the integration.  This constructor is
+distinguished from the previous constructor by checking whether KEY is a
+reference.
 
 =back
 
@@ -302,7 +303,7 @@ Whether this admin integration may use all Admin API log methods.
 
 =item adminapis_read_resource()
 
-Whether this admin integration may use all Admin API methods that retreive
+Whether this admin integration may use all Admin API methods that retrieve
 objects such as users, phones, and hardware tokens.
 
 =item adminapis_settings()

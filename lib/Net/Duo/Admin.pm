@@ -174,7 +174,8 @@ sub users {
 __END__
 
 =for stopwords
-Allbery Auth MERCHANTABILITY NONINFRINGEMENT sublicense
+Allbery Auth MERCHANTABILITY NONINFRINGEMENT sublicense MINTIME
+integrations ip
 
 =head1 NAME
 
