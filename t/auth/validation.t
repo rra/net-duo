@@ -30,8 +30,6 @@ use warnings;
 
 use lib 't/lib';
 
-use HTTP::Response;
-use JSON;
 use Test::Mock::Duo::Agent;
 use Test::More;
 
@@ -49,76 +47,59 @@ $args{user_agent} = $mock;
 my $duo = Net::Duo::Auth->new(\%args);
 isa_ok($duo, 'Net::Duo::Auth');
 
-# Create a JSON encoder.
-my $json = JSON->new->utf8(1);
-
 # Set expected data for a successful validation call.
-my $reply = {
-    stat     => 'OK',
-    response => {
-        result     => 'allow',
-        status     => 'allow',
-        status_msg => 'Success. Logging you in...',
-    },
-};
-my $response = HTTP::Response->new;
-$response->code(200);
-$response->message('Success');
-$response->content($json->encode($reply));
+note('Testing token validation');
 $mock->expect(
     {
-        method   => 'POST',
-        uri      => '/auth/v2/auth',
-        response => $response,
-        content  => {
+        method  => 'POST',
+        uri     => '/auth/v2/auth',
+        content => {
             username => 'user',
             passcode => 'passcode',
             factor   => 'passcode',
         },
+        response_data => {
+            result     => 'allow',
+            status     => 'allow',
+            status_msg => 'Success. Logging you in...',
+        },
     }
 );
-
-# Make the call and check the response.
-note('Testing token validation');
 is($duo->validate_passcode('user', 'passcode'),
     'allow', 'Decoded /auth response is correct');
 
 # Out of band validation.
-$reply->{response} = { txid => 'id' };
-$response->content($json->encode($reply));
+note('Testing out-of-band validation');
 $mock->expect(
     {
-        method   => 'POST',
-        uri      => '/auth/v2/auth',
-        response => $response,
-        content  => {
+        method  => 'POST',
+        uri     => '/auth/v2/auth',
+        content => {
             username => 'user',
             factor   => 'auto',
             device   => 'auto',
             async    => 1,
         },
+        response_data => { txid => 'id' },
     }
 );
-note('Testing out-of-band validation');
 is($duo->validate_out_of_band('user'),
     'id', 'Decoded /auth response is correct');
 
 # Out of band auth_status.
-$reply->{response} = {
-    result     => 'allow',
-    status     => 'allow',
-    status_msg => 'Success. Logging you in...',
-};
-$response->content($json->encode($reply));
+note('Testing auth_status');
 $mock->expect(
     {
-        method   => 'GET',
-        uri      => '/auth/v2/auth_status',
-        response => $response,
-        content  => { txid => 'id' },
+        method        => 'GET',
+        uri           => '/auth/v2/auth_status',
+        content       => { txid => 'id' },
+        response_data => {
+            result     => 'allow',
+            status     => 'allow',
+            status_msg => 'Success. Logging you in...',
+        },
     }
 );
-note('Testing auth_status');
 is($duo->auth_status('id'),
     'allow', 'Decoded /auth_status response is correct');
 
