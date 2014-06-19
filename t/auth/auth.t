@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 #
-# Test suite for the Auth API validation functions.
+# Test suite for the Auth API auth functions.
 #
 # Written by Jon Robertson <jonrober@stanford.edu>
 # Copyright 2014
@@ -55,7 +55,7 @@ $mock->expect(
         uri     => '/auth/v2/auth',
         content => {
             username => 'user',
-            passcode => 'passcode',
+            passcode => '0123456',
             factor   => 'passcode',
         },
         response_data => {
@@ -65,8 +65,44 @@ $mock->expect(
         },
     }
 );
-is($duo->validate_passcode('user', 'passcode'),
-    'allow', 'Decoded /auth response is correct');
+my $args = {
+    username => 'user',
+    factor   => 'passcode',
+    passcode => '0123456',
+};
+is(scalar($duo->auth($args)), 1, 'Auth returns scalar success');
+
+# Do a Duo Push authentication with some extra data.
+$mock->expect(
+    {
+        method  => 'POST',
+        uri     => '/auth/v2/auth',
+        content => {
+            username => 'user',
+            factor   => 'push',
+            device   => 'auto',
+            pushinfo => 'from=login%20portal&domain=example.com',
+        },
+        response_data => {
+            result     => 'allow',
+            status     => 'allow',
+            status_msg => 'Success. Logging you in...',
+        },
+    }
+);
+$args = {
+    username => 'user',
+    factor   => 'push',
+    device   => 'auto',
+    pushinfo => [from => 'login portal', domain => 'example.com'],
+};
+my ($success, $data) = $duo->auth($args);
+is($success, 1, 'Auth returns list success');
+my $expected = {
+    status     => 'allow',
+    status_msg => 'Success. Logging you in...',
+};
+is_deeply($data, $expected, '...with correct extra information');
 
 # Out of band validation.
 note('Testing out-of-band validation');

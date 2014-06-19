@@ -15,12 +15,99 @@ use warnings;
 
 use parent qw(Net::Duo);
 
+use Carp qw(croak);
+use URI::Escape qw(uri_escape_utf8);
+
 # All dies are of constructed objects, which perlcritic misdiagnoses.
 ## no critic (ErrorHandling::RequireCarping)
 
 ##############################################################################
 # Auth API methods
 ##############################################################################
+
+# Perform a synchronous user authentication.  The user will be authenticated
+# given the factor and additional information provided in the $args argument.
+# The call will not return until the user has authenticated or the call has
+# failed for some reason.  To do long-polling instead, see the auth_async
+# method.
+#
+# $self     - The Net::Duo::Auth object
+# $args_ref - Reference to hash of arguments, chosen from:
+#   user_id  - ID of user (either this or username is required)
+#   username - Username of user (either this or user_id is required)
+#   factor   - One of auto, push, passcode, or phone
+#   ipaddr   - IP address of user (optional)
+# For factor == push:
+#   device           - ID of the device (optional, default is "auto")
+#   type             - String to display before prompt (optional)
+#   display_username - String instead of username (optional)
+#   pushinfo         - Reference to hash of data to show user (optional)
+# For factor == passcode:
+#   passcode - The passcode to validate
+# For factor == phone:
+#   device - The ID of the device to call (optional, default is "auto")
+#
+# Returns: Scalar context: true if user was authenticated, false otherwise
+#          List context: true/false for success, then hash of additional data
+#            status               - Status of authentication
+#            status_msg           - Detailed status message
+#            trusted_device_token - Token to use later for /preauth
+#  Throws: Net::Duo::Exception on failure
+sub auth {
+    my ($self, $args_ref) = @_;
+    my %args = %{$args_ref};
+
+    # Ensure we have either username or user_id, but not neither or both.
+    my $user_count = grep { defined($args{$_}) } qw(username user_id);
+    if ($user_count < 1) {
+        croak('no username or user_id specified');
+    } elsif ($user_count > 1) {
+        croak('username and user_id both given');
+    }
+
+    # Ensure factor is set.
+    if (!defined($args{factor})) {
+        croak('no factor specified');
+    }
+
+    # Set some defaults that we provide in our API guarantee.
+    if ($args{factor} eq 'push' || $args{factor} eq 'phone') {
+        $args{device} //= 'auto';
+    }
+
+    # Convert pushinfo to a URL-encoded string if it is present.  We use this
+    # logic rather than _canonicalize_args so that we can preserve order.
+    if ($args{pushinfo}) {
+        my @pushinfo = @{ $args{pushinfo} };
+        my @pairs;
+        while (@pushinfo) {
+            my $encoded_key   = uri_escape_utf8(shift(@pushinfo));
+            my $encoded_value = uri_escape_utf8(shift(@pushinfo));
+            my $pair          = $encoded_key . q{=} . $encoded_value;
+            push(@pairs, $pair);
+        }
+        $args{pushinfo} = join(q{&}, @pairs);
+    }
+
+    # Currently, we don't validate any of the other arguments and just pass
+    # them straight to Duo.  We could do better about this.
+    my $result = $self->call_json('POST', '/auth/v2/auth', \%args);
+
+    # Ensure we got a valid result.
+    if (!defined($result->{result})) {
+        my $error = 'no authentication result from Duo';
+        die Net::Duo::Exception->protocol($error, $result);
+    } elsif ($result->{result} ne 'allow' && $result->{result} ne 'deny') {
+        my $error = "invalid authentication result $result->{result}";
+        die Net::Duo::Exception->protocol($error, $result);
+    }
+
+    # Determine whether the authentication succeeded, and return the correct
+    # results.
+    my $success = $result->{result} eq 'allow';
+    delete $result->{result};
+    return wantarray ? ($success, $result) : $success;
+}
 
 # Confirm that authentication works properly.
 #
@@ -79,25 +166,6 @@ sub validate_out_of_band {
     return $result->{txid};
 }
 
-# Validate a passcode given to us by a user.
-#
-# $self     - The Net::Duo::Auth object
-# $username - The username to check against
-# $passcode - The passcode given by the user
-#
-# Returns: Status of the auth.  Will be 'allow' on success.
-#  Throws: Net::Duo::Exception on failure
-sub validate_passcode {
-    my ($self, $username, $passcode) = @_;
-    my $data = {
-        username => $username,
-        factor   => 'passcode',
-        passcode => $passcode,
-    };
-    my $result = $self->call_json('POST', '/auth/v2/auth', $data);
-    return $result->{status};
-}
-
 # Check on the current status of a user auth request that requires a user
 # response, such as a phone call or Duo Push.
 #
@@ -118,7 +186,7 @@ __END__
 
 =for stopwords
 Allbery Auth MERCHANTABILITY NONINFRINGEMENT sublicense SMS passcode
-passcodes
+passcodes ipaddr pushinfo
 
 =head1 NAME
 
@@ -174,6 +242,129 @@ documentation of the possible arguments.
 
 =over 4
 
+=item auth(ARGS)
+
+Perform a Duo synchronous authentication.
+
+Perform a synchronous user authentication.  The user will be authenticated
+given the factor and additional information provided in ARGS.  The call
+will not return until the user has authenticated or the call has failed
+for some reason.  To do long-polling instead, see auth_async().
+
+ARGS should be a reference to a hash.  The following keys may always be
+present:
+
+=over 4
+
+=item user_id
+
+The Duo ID of the user to authenticate.  Either this or C<username>, but
+only one or the other, must be specified.
+
+=item username
+
+The username of the user to authenticate.  Either this or C<username>, but
+only one or the other, must be specified.
+
+=item factor
+
+The authentication factor to use, chosen from C<push>, C<passcode>, or
+C<phone>, or C<auto> to use whichever of C<push> or C<phone> appears best
+for this user's devices according to Duo.  Required.
+
+=item ipaddr
+
+The IP address of the user, used for logging and to support sending an
+C<allow> response without further verification if the user is coming from
+a trusted network as configured in the integration.
+
+=back
+
+Additional keys may be present depending on C<factor>.  For a C<factor>
+value of C<push>:
+
+=over 4
+
+=item device
+
+The ID of the device to which to send the push notification, or C<auto> to
+send to the first push-capable device.  Optional, defaulting to C<auto>.
+
+=item type
+
+This string is displayed in the Duo Mobile app before the word C<request>.
+The default is C<Login>, so the phrase C<Login request> appears in the
+push notification text and on the request details screen.  You may want to
+specify C<Transaction>, C<Transfer>, etc.  Optional.
+
+=item display_username
+
+String to display in Duo Mobile in place of the user's Duo username.
+Optional.
+
+=item pushinfo
+
+A reference to a list of additional key/value pairs to display to the user
+as part of the authentication request.  For example:
+
+    { pushinfo => [from => 'login portal', domain => 'example.com'] }
+
+This is a list rather than a hash so that it preserves the order of
+arguments, but there should always be an even number of members in the
+list.
+
+=back
+
+For a C<factor> value of C<passcode>:
+
+=over 4
+
+=item passcode
+
+The passcode to validate.  Required.
+
+=back
+
+For a C<factor> value of C<phone>:
+
+=over 4
+
+=item phone
+
+The ID of the device to call, or C<auto> to call the first available
+device.  Optional and defaults to C<auto>.
+
+=back
+
+In a scalar context, this method returns true if the user was successfully
+authenticated and false if authentication failed for any reason.  In a
+list context, the same status argument is returned as the first member of
+the list, and the second member of the list will be a reference to a hash
+of additional data.  Possible keys are:
+
+=over 4
+
+=item status
+
+String detailing the progress or outcome of the authentication attempt.
+
+=item status_msg
+
+A string describing the result of the authentication attempt.  If the
+authentication attempt was denied, it may identify a reason.  This string
+is intended for display to the user.
+
+=item trusted_device_token
+
+If the trusted devices option is enabled for this account, returns a token
+for a trusted device that can later be passed to the Duo C<preauth>
+endpoint.
+
+=back
+
+If you are looking for the Duo C<sms> factor type, use the
+send_sms_passcodes() method instead.
+
 =item auth_status(ID)
 
 Calls the Duo C<auth_status> endpoint.  This is used to check the current
@@ -205,12 +396,6 @@ authentication.  This requests an out-of-band user authentication attempt
 phone or device.  On success, it will return the transaction ID for the
 authentication attempt.  This can be used with auth_status() later to
 determine the final outcome of the authentication.
-
-=item validate_passcode(USERID, PASSCODE)
-
-Calls the Duo C<auth> endpoint.  This attempts to validate a passcode
-against a user account to see if the user can successfully log in.  On
-success, it returns the status of the authentication attempt from Duo.
 
 =back
 
