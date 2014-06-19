@@ -177,7 +177,8 @@ defaults to false.
 =item enroll_policy
 
 What to do after an enrolled user passes primary authentication.  See the
-L</enroll_policy()> method below for the possible values.  Optional.
+L</enroll_policy()> method below for the possible values.  Optional and
+defaults to C<enroll>.
 
 =item greeting
 
@@ -203,7 +204,7 @@ documentation.  Optional.
 
 What to do after a new user from a trusted IP completes primary
 authentication.  See the L</ip_whitelist_enroll_policy()> method below for
-the possible values.  Optional.
+the possible values.  Optional and defaults to C<enforce>.
 
 =item name
 
@@ -229,7 +230,7 @@ Admin API documentation.  Required.
 
 Controls whether or not usernames should be altered before trying to match
 them to a user account.  See the L</username_normalization_policy()> method
-below for the possible values.  Optional.
+below for the possible values.  Optional and defaults to C<simple>.
 
 =item visual_style
 
