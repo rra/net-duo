@@ -15,6 +15,9 @@ use warnings;
 
 use parent qw(Net::Duo);
 
+# All dies are of constructed objects, which perlcritic misdiagnoses.
+## no critic (ErrorHandling::RequireCarping)
+
 ##############################################################################
 # Auth API methods
 ##############################################################################
@@ -32,22 +35,29 @@ sub check {
 }
 
 # Send one or more passcodes (depending on Duo configuration) to a user via
-# SMS.
+# SMS.  This should always succeed, so any error results in an exception.
 #
 # $self     - The Net::Duo::Auth object
 # $username - The username to send SMS passcodes to
+# $device   - ID of the device to which to send passcodes (optional)
 #
-# Returns: Status of the request.  Will be 'sent' on success
+# Returns: undef
 #  Throws: Net::Duo::Exception on failure
-sub sms_passcodes {
-    my ($self, $username) = @_;
+sub send_sms_passcodes {
+    my ($self, $username, $device) = @_;
     my $data = {
         username => $username,
         factor   => 'sms',
-        device   => 'auto',
+        device   => $device // 'auto',
     };
     my $result = $self->call_json('POST', '/auth/v2/auth', $data);
-    return $result->{status};
+    if ($result->{status} ne 'sent') {
+        my $status  = $result->{status};
+        my $message = $result->{status_msg};
+        my $error   = "sending SMS passcodes returned $status: $message";
+        die Net::Duo::Exception->protocol($error, $result);
+    }
+    return;
 }
 
 # Validate an out-of-band method, such as Duo Push or a phone call.
@@ -180,12 +190,12 @@ all of the integration arguments are correct and the client can
 authenticate to the Duo authentication API.  On success, it returns the
 current time on the Duo server in seconds since UNIX epoch.
 
-=item sms_passcodes(USERID)
+=item send_sms_passcodes(USERNAME[, DEVICE])
 
-Calls the Duo C<auth> endpoint but without performing an authentication,
-just telling Duo to send a new batch of passcodes via SMS.  The user's
-first SMS-capable phone is used unconditionally.  On success, it returns
-the status of the call.
+Send a new batch of passcodes to the specified user via SMS.  By default,
+the passcodes will be sent to the first SMS-capable device (the Duo
+C<auto> behavior).  The optional second argument specifies a device ID to
+which to send the passcodes.  Any failure will result in an exception.
 
 =item validate_out_of_band(USERID)
 

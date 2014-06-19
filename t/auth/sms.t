@@ -47,8 +47,8 @@ $args{user_agent} = $mock;
 my $duo = Net::Duo::Auth->new(\%args);
 isa_ok($duo, 'Net::Duo::Auth');
 
-# Set expected data for a successful validation call.
-note('Testing token validation');
+# Test sending passcodes to the default device.
+note('Testing sending SMS passcodes to default device');
 $mock->expect(
     {
         method  => 'POST',
@@ -64,9 +64,27 @@ $mock->expect(
         },
     }
 );
+is($duo->send_sms_passcodes('user'), undef, 'Sent passcodes');
 
-# Make the call and check the response.
-is($duo->sms_passcodes('user'), 'sent', 'Decoded /auth response is correct');
+# Now send to an alternate device.
+note('Testing sending SMS passcodes a specific device');
+$mock->expect(
+    {
+        method  => 'POST',
+        uri     => '/auth/v2/auth',
+        content => {
+            username => 'user',
+            factor   => 'sms',
+            device   => 'DPFZRS9FB0D46QFTM891',
+        },
+        response_data => {
+            result => 'deny',
+            status => 'sent',
+        },
+    }
+);
+is($duo->send_sms_passcodes('user', 'DPFZRS9FB0D46QFTM891'),
+    undef, 'Sent passcodes to device');
 
 # Finished.  Tell Test::More that.
 done_testing();
