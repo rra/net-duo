@@ -104,26 +104,27 @@ my $expected = {
 };
 is_deeply($data, $expected, '...with correct extra information');
 
-# Out of band validation.
-note('Testing out-of-band validation');
+# Test an asynchronous authentication.
+note('Testing asynchronous authentication');
 $mock->expect(
     {
         method  => 'POST',
         uri     => '/auth/v2/auth',
         content => {
             username => 'user',
-            factor   => 'auto',
             device   => 'auto',
+            factor   => 'auto',
             async    => 1,
         },
         response_data => { txid => 'id' },
     }
 );
-is($duo->validate_out_of_band('user'),
-    'id', 'Decoded /auth response is correct');
+my $async = $duo->auth_async({ username => 'user', factor => 'auto' });
+isa_ok($async, 'Net::Duo::Auth::Async', 'return from auth_async');
+is($async->id, 'id', '...with correct transaction ID');
 
 # Out of band auth_status.
-note('Testing auth_status');
+note('Testing authentication status');
 $mock->expect(
     {
         method        => 'GET',
@@ -136,8 +137,33 @@ $mock->expect(
         },
     }
 );
-is($duo->auth_status('id'),
-    'allow', 'Decoded /auth_status response is correct');
+is($async->status, 'allow', 'Async status correct in scalar context');
+$mock->expect(
+    {
+        method        => 'GET',
+        uri           => '/auth/v2/auth_status',
+        content       => { txid => 'id' },
+        response_data => {
+            result     => 'allow',
+            status     => 'allow',
+            status_msg => 'Success. Logging you in...',
+        },
+    }
+);
+my $status;
+($status, $data) = $async->status;
+is($status, 'allow', 'Async status correct in array context');
+$expected = {
+    status     => 'allow',
+    status_msg => 'Success. Logging you in...',
+};
+is_deeply($data, $expected, 'Async data correct in array context');
+
+# Recreate the Net::Duo::Auth::Async object from the transaction ID.
+my $id = $async->id;
+$async = Net::Duo::Auth::Async->new($duo, $id);
+isa_ok($async, 'Net::Duo::Auth::Async', 'return from new');
+is($async->id, 'id', '...with correct transaction ID');
 
 # Finished.  Tell Test::More that.
 done_testing();
