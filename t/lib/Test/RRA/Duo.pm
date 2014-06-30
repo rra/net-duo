@@ -53,6 +53,13 @@ my @PHONE_KEYS = qw(
   phone_id number extension name postdelay predelay type platform
   activated sms_passcodes_sent
 );
+my @INTEGRATION_KEYS = qw(
+  adminapi_admins adminapi_info adminapi_integrations adminapi_read_log
+  adminapi_read_resource adminapi_settings adminapi_write_resource
+  enroll_policy greeting integration_key ip_whitelist_enroll_policy name
+  notes secret_key trusted_device_days type username_normalization_policy
+  visual_style
+);
 
 # Declare variables that should be set in BEGIN for robustness.
 our @EXPORT_OK;
@@ -61,7 +68,8 @@ our @EXPORT_OK;
 # circular module loading.
 BEGIN {
     @EXPORT_OK = qw(
-      is_admin_group is_admin_phone is_admin_token is_admin_user
+      is_admin_group is_admin_integration is_admin_phone is_admin_token
+      is_admin_user
     );
 }
 
@@ -111,10 +119,39 @@ sub is_admin_group {
     isa_ok($seen, 'Net::Duo::Admin::Group', $prefix);
 
     # Check the underlying data.
-    $prefix //= q{};
+    $prefix = defined($prefix) ? "$prefix " : q{};
     for my $key (@GROUP_KEYS) {
-        is($seen->$key, $expected->{$key}, "...$prefix $key");
+        is($seen->$key, $expected->{$key}, "...$prefix$key");
     }
+    return;
+}
+
+# Given a Net::Duo::Admin::Integration object and the data structure
+# representation of the JSON for that user, check that all the data fields
+# match.  Test results are reported via Test::More.
+#
+# $seen     - The Net::Duo::Admin::Integration object
+# $expected - The data structure representing that group
+# $prefix   - The prefix for the comment on test results
+#
+# Returns: undef
+sub is_admin_integration {
+    my ($seen, $expected, $prefix) = @_;
+
+    # Check object type.
+    isa_ok($seen, 'Net::Duo::Admin::Integration', $prefix);
+
+    # Check the underlying data.
+    $prefix = defined($prefix) ? "$prefix " : q{};
+    for my $key (@INTEGRATION_KEYS) {
+        is($seen->$key, $expected->{$key}, "...$prefix$key");
+    }
+
+    # Check the groups_allowed and ip_whitelist fields, which are arrays.
+    my $want = $expected->{groups_allowed} // [];
+    is_deeply([$seen->groups_allowed], $want, "...${prefix}groups_allowed");
+    $want = $expected->{ip_whitelist} // [];
+    is_deeply([$seen->ip_whitelist], $want, "...${prefix}ip_whitelist");
     return;
 }
 
@@ -134,17 +171,14 @@ sub is_admin_phone {
     isa_ok($seen, 'Net::Duo::Admin::Phone', $prefix);
 
     # Check the underlying simple data.
-    $prefix //= q{};
+    $prefix = defined($prefix) ? "$prefix " : q{};
     for my $key (@PHONE_KEYS) {
-        is($seen->$key, $expected->{$key}, "...$prefix $key");
+        is($seen->$key, $expected->{$key}, "...$prefix$key");
     }
 
     # Check the capabilities, which is an array.
-    is_deeply(
-        [$seen->capabilities],
-        $expected->{capabilities},
-        "...$prefix capabilities",
-    );
+    my $want = $expected->{capabilities} // [];
+    is_deeply([$seen->capabilities], $want, "...${prefix}capabilities");
     return;
 }
 
@@ -164,9 +198,9 @@ sub is_admin_token {
     isa_ok($seen, 'Net::Duo::Admin::Token', $prefix);
 
     # Check the underlying simple data.
-    $prefix //= q{};
+    $prefix = defined($prefix) ? "$prefix " : q{};
     for my $key (@TOKEN_KEYS) {
-        is($seen->$key, $expected->{$key}, "...$prefix $key");
+        is($seen->$key, $expected->{$key}, "...$prefix$key");
     }
     return;
 }
@@ -189,7 +223,7 @@ sub is_admin_user {
     # Check the top-level, simple data.  We can't just use is_deeply on the
     # top-level object because we've converted some of the underlying hashes
     # to other objects, so we walk specific keys and confirm they match.
-    $prefix //= q{};
+    $prefix = defined($prefix) ? "$prefix " : q{};
     for my $key (@USER_KEYS) {
         is($seen->$key, $expected->{$key}, "...$prefix$key");
     }
@@ -261,6 +295,10 @@ data (EXPECTED), and a prefix for the messages for test results (PREFIX).
 =item is_admin_group(SEEN, EXPECTED, PREFIX)
 
 Check a Net::Duo::Admin::Group object.
+
+=item is_admin_integration(SEEN, EXPECTED, PREFIX)
+
+Check a Net::Duo::Admin::Integration object.
 
 =item is_admin_phone(SEEN, EXPECTED, PREFIX)
 

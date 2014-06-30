@@ -29,6 +29,23 @@ sub _fields {
 # Install our accessors.
 Net::Duo::Admin::Token->install_accessors;
 
+# Override the new method to support creating a token from an ID instead
+# of decoded JSON data.
+#
+# $class      - Class of object to create
+# $duo        - Net::Duo object to use to create the object
+# $id_or_data - Token ID or reference to data
+#
+# Returns: Newly-created object
+#  Throws: Net::Duo::Exception on any problem creating the object
+sub new {
+    my ($class, $duo, $id_or_data) = @_;
+    if (!ref($id_or_data)) {
+        $id_or_data = $duo->call_json('GET', "/admin/v1/tokens/$id_or_data");
+    }
+    return $class->SUPER::new($duo, $id_or_data);
+}
+
 # Override the create method to add the appropriate URI.
 #
 # $class    - Class of object to create
@@ -134,6 +151,14 @@ Creates a new Net::Duo::Admin::Token object from a full data set.  DUO is
 the Net::Duo object that should be used for any further actions on this
 object.  DATA should be the data structure returned by the Duo REST API
 for a single user, after JSON decoding.
+
+=item new(DUO, ID)
+
+Creates a new Net::Duo::Admin::Token by ID.  DUO is the Net::Duo object
+that is used to retrieve the token from Duo and will be used for any
+subsequent operations.  The ID should be the Duo identifier of the token.
+This constructor is distinguished from the previous constructor by
+checking whether ID is a reference.
 
 =back
 

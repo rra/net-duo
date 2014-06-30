@@ -22,6 +22,9 @@ provides:
   Net::Duo::Admin::Group:
     file: lib/Net/Duo/Admin/Group.pm
     version: '1.00'
+  Net::Duo::Admin::Integration:
+    file: lib/Net/Duo/Admin/Integration.pm
+    version: '1.00'
   Net::Duo::Admin::Phone:
     file: lib/Net/Duo/Admin/Phone.pm
     version: '1.00'
@@ -33,6 +36,9 @@ provides:
     version: '1.00'
   Net::Duo::Auth:
     file: lib/Net/Duo/Auth.pm
+    version: '1.00'
+  Net::Duo::Auth::Async:
+    file: lib/Net/Duo/Auth/Async.pm
     version: '1.00'
   Net::Duo::Exception:
     file: lib/Net/Duo/Exception.pm
