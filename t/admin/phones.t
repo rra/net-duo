@@ -130,7 +130,7 @@ $mock->expect(
         response_file => 't/data/responses/phone-create.json',
     }
 );
-note('Testing phone creation by ID');
+note('Testing phone retrieval by ID');
 $phone = Net::Duo::Admin::Phone->new($duo, $id);
 is_admin_phone($phone, $expected);
 

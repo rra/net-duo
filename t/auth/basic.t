@@ -30,8 +30,6 @@ use warnings;
 
 use lib 't/lib';
 
-use HTTP::Response;
-use JSON;
 use Test::Mock::Duo::Agent;
 use Test::More;
 
@@ -49,30 +47,15 @@ $args{user_agent} = $mock;
 my $duo = Net::Duo::Auth->new(\%args);
 isa_ok($duo, 'Net::Duo::Auth');
 
-# Create a JSON encoder.
-my $json = JSON->new->utf8(1);
-
-# Set expected data for a check call.
-my $reply = {
-    stat     => 'OK',
-    response => {
-        time => 1_357_020_061,
-    },
-};
-my $response = HTTP::Response->new;
-$response->code(200);
-$response->message('Success');
-$response->content($json->encode($reply));
+# Verify the check call.
+note('Testing check endpoint');
 $mock->expect(
     {
-        method   => 'GET',
-        uri      => '/auth/v2/check',
-        response => $response,
+        method        => 'GET',
+        uri           => '/auth/v2/check',
+        response_data => { time => 1_357_020_061 },
     }
 );
-
-# Make the call and check the response.
-note('Testing check endpoint');
 is($duo->check, 1_357_020_061, 'Decoded /check response is correct');
 
 # Finished.  Tell Test::More that.

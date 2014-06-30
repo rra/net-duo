@@ -30,8 +30,6 @@ use warnings;
 
 use lib 't/lib';
 
-use HTTP::Response;
-use JSON;
 use Test::Mock::Duo::Agent;
 use Test::More;
 
@@ -49,37 +47,44 @@ $args{user_agent} = $mock;
 my $duo = Net::Duo::Auth->new(\%args);
 isa_ok($duo, 'Net::Duo::Auth');
 
-# Create a JSON encoder.
-my $json = JSON->new->utf8(1);
-
-# Set expected data for a successful validation call.
-my $reply = {
-    stat     => 'OK',
-    response => {
-        result => 'deny',
-        status => 'sent',
-    },
-};
-my $response = HTTP::Response->new;
-$response->code(200);
-$response->message('Success');
-$response->content($json->encode($reply));
+# Test sending passcodes to the default device.
+note('Testing sending SMS passcodes to default device');
 $mock->expect(
     {
-        method   => 'POST',
-        uri      => '/auth/v2/auth',
-        response => $response,
-        content  => {
+        method  => 'POST',
+        uri     => '/auth/v2/auth',
+        content => {
             username => 'user',
             factor   => 'sms',
             device   => 'auto',
         },
+        response_data => {
+            result => 'deny',
+            status => 'sent',
+        },
     }
 );
+is($duo->send_sms_passcodes('user'), undef, 'Sent passcodes');
 
-# Make the call and check the response.
-note('Testing token validation');
-is($duo->sms_passcodes('user'), 'sent', 'Decoded /auth response is correct');
+# Now send to an alternate device.
+note('Testing sending SMS passcodes a specific device');
+$mock->expect(
+    {
+        method  => 'POST',
+        uri     => '/auth/v2/auth',
+        content => {
+            username => 'user',
+            factor   => 'sms',
+            device   => 'DPFZRS9FB0D46QFTM891',
+        },
+        response_data => {
+            result => 'deny',
+            status => 'sent',
+        },
+    }
+);
+is($duo->send_sms_passcodes('user', 'DPFZRS9FB0D46QFTM891'),
+    undef, 'Sent passcodes to device');
 
 # Finished.  Tell Test::More that.
 done_testing();

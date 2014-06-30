@@ -163,7 +163,7 @@ about a phone.
 
 =item create(DUO, DATA)
 
-Creates a new phone in Duo and returns the resulting user as a new
+Creates a new phone in Duo and returns the resulting phone as a new
 Net::Duo::Admin::Phone object.  DUO is the Net::Duo object that should be
 used to perform the creation.  DATA is a reference to a hash with the
 following keys:

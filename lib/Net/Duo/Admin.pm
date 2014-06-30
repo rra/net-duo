@@ -15,11 +15,113 @@ use warnings;
 
 use parent qw(Net::Duo);
 
+use Net::Duo::Admin::Integration;
 use Net::Duo::Admin::User;
 
 ##############################################################################
 # Admin API methods
 ##############################################################################
+
+# Retrieve all integrations associated with a Duo account.
+#
+# $self - The Net::Duo::Admin object
+#
+# Returns: List of Net::Duo::Admin::Integration objects
+#  Throws: Net::Duo::Exception on failure
+sub integrations {
+    my ($self) = @_;
+
+    # Make the Duo call and get the decoded result.
+    my $result = $self->call_json('GET', '/admin/v1/integrations');
+
+    # Convert the returned integrations into Net::Duo::Admin::Integration
+    # objects.
+    my @integrations;
+    for my $integration (@{$result}) {
+        my $object = Net::Duo::Admin::Integration->new($self, $integration);
+        push(@integrations, $object);
+    }
+    return @integrations;
+}
+
+# Retrieve logs of administrative actions.  At most 1000 entries are returned,
+# so the caller may need to call this repeatedly with different mintime
+# parameters to retrieve all of the logs.
+#
+# $self    - The Net::Duo::Admin object
+# $mintime - Only return records with a timestamp after this (optional)
+#
+# Returns: A list of log entries, each of which is a hash reference with keys:
+#            timestamp   - Time of event in seconds since epoch
+#            username    - Admin username or API for changes via API
+#            action      - The action taken
+#            object      - The object on which the action was performed
+#            description - The details of what was changed
+#  Throws: Net::Duo::Exception on failure
+sub logs_administrator {
+    my ($self, $mintime) = @_;
+
+    # Make the Duo call and get the decoded result.
+    my $args   = defined($mintime) ? { mintime => $mintime } : {};
+    my $uri    = '/admin/v1/logs/administrator';
+    my $result = $self->call_json('GET', $uri, $args);
+
+    # Return the result as a list.
+    return @{$result};
+}
+
+# Retrieve authentication logs.  At most 1000 entries are returned, so the
+# caller may need to call this repeatedly with different mintime parameters to
+# retrieve all of the logs.
+#
+# $self    - The Net::Duo::Admin object
+# $mintime - Only return records with a timestamp after this (optional)
+#
+# Returns: A list of log entries, each of which is a hash reference with keys:
+#            timestamp   - Time of event in seconds since epoch
+#            username    - The authenticating username
+#            factor      - The authentication factor
+#            result      - The result of the authentication
+#            ip          - IP address from which the request originated
+#            integration - Integration name attempting the authentication
+#  Throws: Net::Duo::Exception on failure
+sub logs_authentication {
+    my ($self, $mintime) = @_;
+
+    # Make the Duo call and get the decoded result.
+    my $args   = defined($mintime) ? { mintime => $mintime } : {};
+    my $uri    = '/admin/v1/logs/authentication';
+    my $result = $self->call_json('GET', $uri, $args);
+
+    # Return the result as a list.
+    return @{$result};
+}
+
+# Retrieve telephony logs.  At most 1000 entries are returned, so the caller
+# may need to call this repeatedly with different mintime parameters to
+# retrieve all of the logs.
+#
+# $self    - The Net::Duo::Admin object
+# $mintime - Only return records with a timestamp after this (optional)
+#
+# Returns: A list of log entries, each of which is a hash reference with keys:
+#            timestamp - Time of event in seconds since epoch
+#            context   - How this telephony event was initiated
+#            type      - The event type
+#            phone     - The phone number for this event
+#            credits   - How many telephony credits this event cost
+#  Throws: Net::Duo::Exception on failure
+sub logs_telephony {
+    my ($self, $mintime) = @_;
+
+    # Make the Duo call and get the decoded result.
+    my $args   = defined($mintime) ? { mintime => $mintime } : {};
+    my $uri    = '/admin/v1/logs/telephony';
+    my $result = $self->call_json('GET', $uri, $args);
+
+    # Return the result as a list.
+    return @{$result};
+}
 
 # Retrieve a single user by username.  An empty reply indicates that no user
 # by that username exists.
@@ -72,7 +174,8 @@ sub users {
 __END__
 
 =for stopwords
-Allbery Auth MERCHANTABILITY NONINFRINGEMENT sublicense
+Allbery Auth MERCHANTABILITY NONINFRINGEMENT sublicense MINTIME
+integrations ip
 
 =head1 NAME
 
@@ -133,6 +236,129 @@ documentation of the possible arguments.
 =head1 INSTANCE METHODS
 
 =over 4
+
+=item integrations()
+
+Retrieves all the integrations currently present in this Duo account and
+returns them as a list of Net::Duo::Admin::Integration objects.  Be aware
+that this list may be quite long if the Duo account supports many
+integrations, and the entire list is read into memory.
+
+=item logs_administrator([MINTIME])
+
+Returns a list of administrative actions.  Each member of this list will
+be a reference to a hash with the following keys:
+
+=over 4
+
+=item timestamp
+
+The time of the event in seconds since UNIX epoch.
+
+=item username
+
+The username of the administrator, or C<API> if the action was performed
+via the Admin API.
+
+=item action
+
+The administrator action.  See the Duo Admin API documentation for a full
+list of valid values.
+
+=item object
+
+An identifier for the object that was acted on.  What fields are used as
+an identifier will vary by type of object.
+
+=item description
+
+The details of what was changed.
+
+=back
+
+At most 1,000 log entries will be returned.  If MINTIME is provided, only
+records with a time stamp after MINTIME will be returned.  All records can
+therefore be retrieved by calling this method repeatedly, first with no
+MINTIME and then with MINTIME matching the timestamp of the last returned
+record from the previous call.
+
+=item logs_authentication([MINTIME])
+
+Returns a list of authentication attempts.  Each member of the list will
+be a reference to a hash with the following keys:
+
+=over 4
+
+=item timestamp
+
+The time of the event in seconds since UNIX epoch.
+
+=item username
+
+The authenticating user's username.
+
+=item factor
+
+The authentication factor, chosen from C<phone call>, C<passcode>,
+C<bypass code>, C<sms passcode>, C<sms refresh>, or C<duo push>.
+
+=item result
+
+The result of the authentication, chosen from C<success>, C<failure>,
+C<error>, or C<fraud>.
+
+=item ip
+
+The IP address from which the authentication attempt originated.
+
+=item integration
+
+The name of the integration from which the authentication attempt
+originated.
+
+=back
+
+At most 1,000 authentication log entries will be returned.  If MINTIME is
+provided, only records with a time stamp after MINTIME will be returned.
+All records can therefore be retrieved by calling this method repeatedly,
+first with no MINTIME and then with MINTIME matching the timestamp of the
+last returned record from the previous call.
+
+=item logs_telephony([MINTIME])
+
+Returns a list of telephony events.  Each member of this list will be a
+reference to a hash with the following keys:
+
+=over 4
+
+=item timestamp
+
+The time of the event in seconds since UNIX epoch.
+
+=item context
+
+How this telephony event was initiated.  This will be one of
+C<administrator login>, C<authentication>, C<enrollment>, or C<verify>.
+
+=item type
+
+The event type.  One of C<sms> or C<phone>.
+
+=item phone
+
+The phone number that initiated this event.
+
+=item credits
+
+How many telephony credits this event cost.
+
+=back
+
+At most 1,000 log entries will be returned.  If MINTIME is provided, only
+records with a time stamp after MINTIME will be returned.  All records can
+therefore be retrieved by calling this method repeatedly, first with no
+MINTIME and then with MINTIME matching the timestamp of the last returned
+record from the previous call.
 
 =item user(USERNAME)
 
