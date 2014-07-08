@@ -143,6 +143,22 @@ sub remove_token {
 }
 ## use critic
 
+# Get one or more bypass codes for a user.  Options are defined by the given
+# hash reference of arguments to Duo's bypass_codes action.
+#
+# $self     - The Net::Duo::Admin::User object to modify
+# $data_ref - Data for the bypass code request as a hash reference
+#
+# Returns: A reference to an array of bypass codes
+#  Throws: Net::Duo::Exception on any problem getting the codes
+## no critic (ErrorHandling::RequireCarping)
+sub bypass_codes {
+    my ($self, $data_ref) = @_;
+    my $uri = "/admin/v1/users/$self->{user_id}/bypass_codes";
+    return $self->{_duo}->call_json('POST', $uri, $data_ref);
+}
+## use critic
+
 1;
 __END__
 
@@ -252,6 +268,11 @@ phones associated with this user will be left unchanged.
 
 Disassociate the Net::Duo::Admin::Token object TOKEN from this user.  Other
 tokens associated with this user will be left unchanged.
+
+=item bypass_codes(DATA)
+
+Requests a number of bypass codes (specified in data, defaulting to 1) that
+the user can use to log in without any normal methods available.
 
 =back
 
