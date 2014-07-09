@@ -167,6 +167,49 @@ $raw      = slurp('t/data/responses/user-create.json');
 $expected = $json->decode($raw);
 is_admin_user($user, $expected);
 
+# Test a user update.  First, we'll do an update with every field that's
+# possible to change.  When we commit, all the fields should revert since we
+# refresh from the server's view.
+$data = {
+    email    => 'jane@example.net',
+    notes    => 'Some other user note',
+    realname => 'Jane Hamilton',
+    status   => 'bypass',
+    username => 'jane',
+};
+my $id = $expected->{user_id};
+$mock->expect(
+    {
+        method        => 'POST',
+        uri           => "/admin/v1/users/$id",
+        content       => $data,
+        response_file => 't/data/responses/user-create.json',
+    }
+);
+note('Testing user modification with all data');
+for my $field (sort keys %{$data}) {
+    my $method = "set_$field";
+    $user->$method($data->{$field});
+    is($user->$field, $data->{$field}, "set_$field changes data");
+}
+$user->commit;
+is_admin_user($user, $expected);
+
+# Now test a user update with only one change.
+$data = { realname => 'Peter Jacobs' };
+$mock->expect(
+    {
+        method        => 'POST',
+        uri           => "/admin/v1/users/$id",
+        content       => $data,
+        response_file => 't/data/responses/user-create.json',
+    }
+);
+note('Testing user modification with one field');
+$user->set_realname('Peter Jacobs');
+$user->commit;
+is_admin_user($user, $expected);
+
 # Delete that user.
 $mock->expect(
     {
