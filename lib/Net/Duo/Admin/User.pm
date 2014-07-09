@@ -90,6 +90,17 @@ sub add_token {
 }
 ## use critic
 
+# Commit any changed data and refresh the object from Duo.
+#
+# $self - The Net::Duo::Admin::User object to commit changes for
+#
+# Returns: undef
+#  Throws: Net::Duo::Exception on any problem updating the object
+sub commit {
+    my ($self) = @_;
+    return $self->SUPER::commit("/admin/v1/users/$self->{user_id}");
+}
+
 # Delete the user from Duo.  After this call, the object should be treated as
 # read-only since it can no longer be usefully updated.
 #
@@ -104,17 +115,6 @@ sub delete {
     return;
 }
 ## use critic
-
-# Commit any changed data and refresh the object from Duo.
-#
-# $self - The Net::Duo::Admin::User object to commit changes for
-#
-# Returns: undef
-#  Throws: Net::Duo::Exception on any problem updating the object
-sub commit {
-    my ($self) = @_;
-    return $self->SUPER::commit("/admin/v1/users/$self->{user_id}");
-}
 
 # Remove a phone from this user.  Other phones will be left unchanged.
 #
@@ -252,6 +252,21 @@ phones associated with this user will be left unchanged.
 
 Associate the Net::Duo::Admin::Token object TOKEN with this user.  Other
 tokens associated with this user will be left unchanged.
+
+=item commit()
+
+Commit all changes made via the set_*() methods to Duo.  Until this method
+is called, any changes made via set_*() are only internal to the object
+and not reflected in Duo.
+
+After commit(), the internal representation of the object will be
+refreshed to match the new data returned by the Duo API for that object.
+Therefore, other fields of the object may change after commit() if some
+other user has changed other, unrelated fields in the object.
+
+It's best to think of this method as a synchronize operation: changed data
+is written back, overwriting what's in Duo, and unchanged data may be
+overwritten by whatever is currently in Duo, if it is different.
 
 =item delete()
 
