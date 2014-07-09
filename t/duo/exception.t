@@ -28,7 +28,6 @@ use 5.014;
 use strict;
 use warnings;
 
-use Carp qw(croak);
 use HTTP::Response;
 use JSON;
 
