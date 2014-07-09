@@ -142,19 +142,20 @@ sub _sign_call {
     return;
 }
 
-# Make a generic Duo API call that returns JSON and do the return status
-# checking that's common to most of the Duo API calls.  There are a few
-# exceptions, like /logo, which do not return JSON and therefore cannot be
-# called using this method).
+# Make a generic Duo API call with no assumptions about its return data type.
+# This returns the raw HTTP::Response object without any further processing.
+# For most Duo APIs, use call_json instead, which assumes that the call
+# returns JSON in a particular structure and checks the status of the HTTP
+# response.
 #
 # $self     - Net::Duo object
 # $method   - HTTP method (GET, PUT, POST, or DELETE)
 # $path     - URL path to the REST endpoint to call
 # $args_ref - Reference to a hash of additional arguments
 #
-# Returns: Reference to hash corresponding to the JSON result
+# Returns: The HTTP::Response object from the API call
 #  Throws: Net::Duo::Exception on any failure
-sub call_json {
+sub call {
     my ($self, $method, $path, $args_ref) = @_;
     my $host = $self->{api_hostname};
     my $args = $self->_canonicalize_args($args_ref);
@@ -194,9 +195,29 @@ sub call_json {
         $request->uri('https://' . $host . $path . q{?} . $args);
     }
 
-    # Make the request and retrieve the content of the response.
-    my $response = $self->{agent}->request($request);
-    my $content  = $response->decoded_content;
+    # Make the request and return the response.
+    return $self->{agent}->request($request);
+}
+
+# Make a generic Duo API call that returns JSON and do the return status
+# checking that's common to most of the Duo API calls.  There are a few
+# exceptions, like /logo, which do not return JSON and therefore cannot be
+# called using this method).
+#
+# $self     - Net::Duo object
+# $method   - HTTP method (GET, PUT, POST, or DELETE)
+# $path     - URL path to the REST endpoint to call
+# $args_ref - Reference to a hash of additional arguments
+#
+# Returns: Reference to hash corresponding to the JSON result
+#  Throws: Net::Duo::Exception on any failure
+sub call_json {
+    my ($self, $method, $path, $args_ref) = @_;
+
+    # Use the simpler call() method to do most of the work.  This returns the
+    # HTTP::Response object.  Retrieve the content of the response as well.
+    my $response = $self->call($method, $path, $args_ref);
+    my $content = $response->decoded_content;
 
     # If the content was empty, we have a failure of some sort.
     if (!defined($content)) {
@@ -340,14 +361,34 @@ for unit testing.
 
 =over 4
 
+=item call(METHOD, PATH[, ARGS])
+
+Make a generic Duo API call, with no assumptions about the response.
+
+This is a low-level escape hatch to make any Duo API call that this module
+does not know about, regardless of what format in which it returns its
+results.  The caller will have to provide all of the details (HTTP method,
+URL path, and all arguments as a reference to a hash of key/value pairs).
+The URL path must start with a slash.
+
+The return value is the resulting HTTP::Response object from the web API
+call.  No error checking will be performed.  The caller is responsible for
+examining the HTTP::Response object for any problems, including internal
+or HTTP errors.
+
+Most Duo API calls return structured JSON and follow a standard pattern
+for indicating errors.  For those calls, use call_json() instead of this
+method.  call() is needed only for the small handful of API calls that do
+not return JSON in that format, such as the Auth API C</logo> endpoint.
+
 =item call_json(METHOD, PATH[, ARGS])
 
 Make a generic Duo API call that returns a JSON response.
 
 This is the escape hatch to use to make any Duo API call that this module
 does not know about.  The caller will have to provide all of the details
-(HTTP method, URL path, and all arguments as a reference to a hash that
-can be converted to JSON).  The URL path must start with a slash.
+(HTTP method, URL path, and all arguments as a reference to a hash of
+key/value pairs).  The URL path must start with a slash.
 
 The return value will be only the value of the response key from the
 returned JSON.  This method still handles checking the C<stat> value from

@@ -28,6 +28,7 @@ use 5.014;
 use strict;
 use warnings;
 
+use HTTP::Response;
 use JSON;
 use Net::Duo::Mock::Agent;
 use Test::More;
@@ -42,6 +43,18 @@ my $mock = Net::Duo::Mock::Agent->new(\%args);
 $args{user_agent} = $mock;
 my $duo = Net::Duo->new(\%args);
 isa_ok($duo, 'Net::Duo');
+
+# Make a generic call with no parameters.
+my $response = HTTP::Response->new('404', 'Resource not found');
+$mock->expect(
+    {
+        method   => 'GET',
+        uri      => '/logo',
+        response => $response,
+    }
+);
+my $result = $duo->call('GET', '/logo');
+is($result, $response, 'call return');
 
 # Make a generic JSON call with some parameters.
 $mock->expect(
@@ -62,7 +75,7 @@ my $args = {
     param => 'one',
     other => 'two',
 };
-my $result = $duo->call_json('POST', '/foo/bar', $args);
+$result = $duo->call_json('POST', '/foo/bar', $args);
 is_deeply($result, { result => 'foo', extra => 'bar' }, 'call_json return');
 
 # Finished.  Tell Test::More that.
