@@ -9,7 +9,7 @@
 # predictable number of test results.  This means that any calling test
 # program should probably not specify a plan and instead use done_testing().
 
-package Test::Mock::Duo::Agent 1.00;
+package Net::Duo::Mock::Agent 1.00;
 
 use 5.014;
 use strict;
@@ -36,7 +36,7 @@ use URI::Escape qw(uri_unescape);
 # This function duplicates the signature and ensures it's correct.  All test
 # results are reported via Test::More functions.
 #
-# $self    - Test::Mock::Duo::Agent object
+# $self    - Net::Duo::Mock::Agent object
 # $request - HTTP::Request object to verify
 #
 # Returns: undef
@@ -79,7 +79,7 @@ sub _verify_signature {
 # determined by the most recent calls to the testing API.  Each request resets
 # the response.  If no response has been configured, throw an exception.
 #
-# $self    - Test::Mock::Duo::Agent object
+# $self    - Net::Duo::Mock::Agent object
 # $request - HTTP::Request object to verify
 #
 # Returns: An HTTP::Response object
@@ -149,7 +149,7 @@ sub request {
 #   key_file        - Path to file with integration information
 #   secret_key      - Secret key for the Duo API integration
 #
-# Returns: New Test::Mock::Duo::Agent object
+# Returns: New Net::Duo::Mock::Agent object
 #  Throws: Text exception on failure to read keys
 sub new {
     my ($class, $args_ref) = @_;
@@ -181,7 +181,7 @@ sub new {
 # HTTP::Response with a status code of 200 and the contents of that file as
 # the body (Content-Type: application/json).
 #
-# $self     - Test::Mock::Duo::Agent object
+# $self     - Net::Duo::Mock::Agent object
 # $args_ref - Expected request and response information
 #   method        - Expected method of the request
 #   uri           - Expected URI of the request without any query string
@@ -243,13 +243,13 @@ NONINFRINGEMENT
 
 =head1 NAME
 
-Test::Mock::Duo::Agent - Mock LWP::UserAgent for Net::Duo testing
+Net::Duo::Mock::Agent - Mock LWP::UserAgent for Net::Duo testing
 
 =head1 SYNOPSIS
 
     # Build the Net::Duo object and the mock.
     my %args = (key_file => 'admin.json');
-    my $mock = Test::Mock::Duo::Agent->new(\%args);
+    my $mock = Net::Duo::Mock::Agent->new(\%args);
     $args{user_agent} = $mock;
     my $duo = Net::Duo::Admin->new(\%args);
 
@@ -281,13 +281,20 @@ All tests are reported by Test::More, and no effort is made to produce a
 predictable number of test results.  This means that any calling test
 program should probably not specify a plan and instead use done_testing().
 
+This module is primarily used by the Net::Duo test suite and can be
+ignored entirely when using Net::Duo normally.  It is provided as part of
+the Net::Duo module install, instead of kept only in the distribution
+source tree, because it may be useful for the test suites of other Perl
+modules or programs that use Net::Duo internally and want to test that
+integration without network access or a live Duo account to point to.
+
 =head1 CLASS METHODS
 
 =over 4
 
 =item new(ARGS)
 
-Create a new Test::Mock::Duo::Agent object.  ARGS should be the same data
+Create a new Net::Duo::Mock::Agent object.  ARGS should be the same data
 structure passed to the Net::Duo-derived constructor (with the obvious
 exception of the user_agent argument, which is ignored).
 
@@ -356,7 +363,7 @@ C<response> key in the returned success response to the client.
 
 This is the interface called internally by Net::Duo to make an API call.
 The interface is the same as the request() method of LWP::UserAgent:
-REQUEST is an HTTP::Request object, and Test::Mock::Duo::Agent will return
+REQUEST is an HTTP::Request object, and Net::Duo::Mock::Agent will return
 an HTTP::Response object.  Currently, this is the only LWP::UserAgent
 method implemented by this mock, since it's the only one that Net::Duo
 uses.
@@ -370,6 +377,8 @@ request.
 
 If request() is called when no request was expected (via an expect() call),
 it throws an exception.
+
+=back
 
 =head1 AUTHOR
 
