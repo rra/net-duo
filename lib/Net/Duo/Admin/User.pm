@@ -90,6 +90,31 @@ sub add_token {
 }
 ## use critic
 
+# Get one or more bypass codes for a user.
+#
+# $self     - The Net::Duo::Admin::User object to modify
+# $data_ref - Data for the bypass code request as a hash reference
+#   count       - The number of codes to generate
+#   codes       - Set this array of codes as bypass codes
+#   reuse_count - The number of times each bypass code can be reused
+#   valid_secs  - Seconds for which these codes are valid
+#
+# Returns: A reference to an array of bypass codes
+#  Throws: Net::Duo::Exception on any problem getting the codes
+sub bypass_codes {
+    my ($self, $data_ref) = @_;
+    my $uri = "/admin/v1/users/$self->{user_id}/bypass_codes";
+
+    # Canonicalize the arguments.
+    my %data = %{$data_ref};
+    if ($data{codes} && ref($data{codes})) {
+        $data{codes} = join(q{,}, @{ $data{codes} });
+    }
+
+    # Make the call and return the results.
+    return $self->{_duo}->call_json('POST', $uri, \%data);
+}
+
 # Commit any changed data and refresh the object from Duo.
 #
 # $self - The Net::Duo::Admin::User object to commit changes for
@@ -153,20 +178,6 @@ sub remove_token {
     return;
 }
 ## use critic
-
-# Get one or more bypass codes for a user.  Options are defined by the given
-# hash reference of arguments to Duo's bypass_codes action.
-#
-# $self     - The Net::Duo::Admin::User object to modify
-# $data_ref - Data for the bypass code request as a hash reference
-#
-# Returns: A reference to an array of bypass codes
-#  Throws: Net::Duo::Exception on any problem getting the codes
-sub bypass_codes {
-    my ($self, $data_ref) = @_;
-    my $uri = "/admin/v1/users/$self->{user_id}/bypass_codes";
-    return $self->{_duo}->call_json('POST', $uri, $data_ref);
-}
 
 1;
 __END__
@@ -253,6 +264,37 @@ phones associated with this user will be left unchanged.
 Associate the Net::Duo::Admin::Token object TOKEN with this user.  Other
 tokens associated with this user will be left unchanged.
 
+=item bypass_codes(DATA)
+
+Requests bypass codes for the user, returning them as a reference to an
+array.  DATA is a reference to a hash of parameters chosen from the
+following keys, all of which are optional:
+
+=over 4
+
+=item count
+
+The number of bypass codes to request.  At most 10 codes (the default if
+C<codes> is not given) can be created at a time.  If this parameter is
+given, C<codes> may not be given.
+
+=item codes
+
+A reference to an array of codes to set as bypass codes for this user.  If
+this parameter is given, C<count> may not be given.
+
+=item reuse_count
+
+The number of times each code in the list may be reused.  Defaults to 1.
+If set to 0, the codes may be reused indefinitely.
+
+=item valid_secs
+
+The number of seconds for which these codes will be valid.  If set to 0
+(the default), the codes will never expire.
+
+=back
+
 =item commit()
 
 Commit all changes made via the set_*() methods to Duo.  Until this method
@@ -292,11 +334,6 @@ phones associated with this user will be left unchanged.
 
 Disassociate the Net::Duo::Admin::Token object TOKEN from this user.  Other
 tokens associated with this user will be left unchanged.
-
-=item bypass_codes(DATA)
-
-Requests a number of bypass codes (specified in data, defaulting to 1) that
-the user can use to log in without any normal methods available.
 
 =back
 

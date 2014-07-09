@@ -210,6 +210,32 @@ $user->set_realname('Peter Jacobs');
 $user->commit;
 is_admin_user($user, $expected);
 
+# Request bypass codes for a user.
+$mock->expect(
+    {
+        method  => 'POST',
+        uri     => "/admin/v1/users/$id/bypass_codes",
+        content => { count => 2, valid_secs => 3600 },
+        response_data => ['567891', '857231'],
+    }
+);
+note('Testing bypass code generation');
+my $codes = $user->bypass_codes({ count => 2, valid_secs => 3600 });
+is_deeply($codes, ['567891', '857231'], 'bypass_codes return');
+
+# The same, but pass in a list of codes to set.
+$mock->expect(
+    {
+        method        => 'POST',
+        uri           => "/admin/v1/users/$id/bypass_codes",
+        content       => { codes => '123891,589134,490152' },
+        response_data => ['123891', '589134', '490152'],
+    }
+);
+note('Testing bypass code setting');
+$codes = $user->bypass_codes({ codes => ['123891', '589134', '490152'] });
+is_deeply($codes, ['123891', '589134', '490152'], 'bypass_codes return');
+
 # Delete that user.
 $mock->expect(
     {
