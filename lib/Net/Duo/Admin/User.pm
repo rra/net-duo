@@ -24,7 +24,7 @@ sub _fields {
     return {
         user_id    => 'simple',
         username   => 'simple',
-        realname   => 'simple',
+        realname   => ['simple', 'set'],
         email      => 'simple',
         status     => 'simple',
         groups     => 'Net::Duo::Admin::Group',
@@ -104,6 +104,17 @@ sub delete {
     return;
 }
 ## use critic
+
+# Commit any changed data and refresh the object from Duo.
+#
+# $self - The Net::Duo::Admin::User object to commit changes for
+#
+# Returns: undef
+#  Throws: Net::Duo::Exception on any problem updating the object
+sub commit {
+    my ($self) = @_;
+    return $self->SUPER::commit("/admin/v1/users/$self->{user_id}");
+}
 
 # Remove a phone from this user.  Other phones will be left unchanged.
 #
