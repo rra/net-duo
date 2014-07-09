@@ -151,13 +151,11 @@ sub remove_token {
 #
 # Returns: A reference to an array of bypass codes
 #  Throws: Net::Duo::Exception on any problem getting the codes
-## no critic (ErrorHandling::RequireCarping)
 sub bypass_codes {
     my ($self, $data_ref) = @_;
     my $uri = "/admin/v1/users/$self->{user_id}/bypass_codes";
     return $self->{_duo}->call_json('POST', $uri, $data_ref);
 }
-## use critic
 
 1;
 __END__
