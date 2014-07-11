@@ -20,7 +20,7 @@ use Digest::SHA qw(hmac_sha1_hex);
 use Encode qw(decode);
 use HTTP::Request;
 use HTTP::Response;
-use JSON;
+use JSON ();
 use Perl6::Slurp;
 use Test::More;
 use URI::Escape qw(uri_unescape);

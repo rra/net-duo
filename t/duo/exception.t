@@ -29,7 +29,7 @@ use strict;
 use warnings;
 
 use HTTP::Response;
-use JSON;
+use JSON ();
 
 use Test::More tests => 53;
 

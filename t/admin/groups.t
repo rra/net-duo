@@ -30,7 +30,7 @@ use warnings;
 
 use lib 't/lib';
 
-use JSON;
+use JSON ();
 use Net::Duo::Mock::Agent;
 use Perl6::Slurp;
 use Test::More;

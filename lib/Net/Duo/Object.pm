@@ -17,6 +17,7 @@ use strict;
 use warnings;
 
 use Carp qw(croak);
+use JSON ();
 use Sub::Install;
 
 # Helper function to parse the data for a particular field specification.
