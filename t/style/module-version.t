@@ -19,7 +19,7 @@ use lib 't/lib';
 use Carp qw(croak);
 use File::Find qw(find);
 use Getopt::Long qw(GetOptions);
-use JSON::PP;
+use JSON::PP ();
 use Test::More;
 use Test::RRA qw(skip_unless_automated use_prereq);
 

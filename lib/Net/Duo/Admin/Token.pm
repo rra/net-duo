@@ -91,6 +91,13 @@ Net::Duo::Admin::Token - Representation of a Duo token
     my $token = Net::Duo::Admin::Token->new($decoded_json);
     say $token->serial;
 
+=head1 REQUIREMENTS
+
+Perl 5.14 or later and the modules HTTP::Request and HTTP::Response (part
+of HTTP::Message), JSON, LWP (also known as libwww-perl), Perl6::Slurp,
+Sub::Install, and URI::Escape (part of URI), all of which are available
+from CPAN.
+
 =head1 DESCRIPTION
 
 A Net::Duo::Admin::Token object is a Perl representation of a Duo token as
@@ -245,5 +252,9 @@ DEALINGS IN THE SOFTWARE.
 L<Net::Duo::Admin>
 
 L<Duo Admin API for tokens|https://www.duosecurity.com/docs/adminapi#tokens>
+
+This module is part of the Net::Duo distribution.  The current version of
+Net::Duo is available from CPAN, or directly from its web site at
+L<http://www.eyrie.org/~eagle/software/net-duo/>.
 
 =cut

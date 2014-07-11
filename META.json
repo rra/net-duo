@@ -71,6 +71,10 @@
          "file" : "lib/Net/Duo/Exception.pm",
          "version" : "1.00"
       },
+      "Net::Duo::Mock::Agent" : {
+         "file" : "lib/Net/Duo/Mock/Agent.pm",
+         "version" : "1.00"
+      },
       "Net::Duo::Object" : {
          "file" : "lib/Net/Duo/Object.pm",
          "version" : "1.00"
