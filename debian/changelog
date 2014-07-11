@@ -1,12 +1,6 @@
-libnet-duo-perl (1.00~alpha2-1) unstable; urgency=medium
+libnet-duo-perl (1.00-1) unstable; urgency=medium
 
-  * Updated internal Stanford-only release.
+  * Initial release.  (Closes: #754503)
 
- -- Russ Allbery <rra@debian.org>  Mon, 30 Jun 2014 12:48:09 -0700
-
-libnet-duo-perl (1.00~alpha1-1) unstable; urgency=medium
-
-  * Internal Stanford-only release for early testing.
-
- -- Russ Allbery <rra@debian.org>  Fri, 13 Jun 2014 19:38:48 -0700
+ -- Russ Allbery <rra@debian.org>  Fri, 11 Jul 2014 13:01:30 -0700
 
