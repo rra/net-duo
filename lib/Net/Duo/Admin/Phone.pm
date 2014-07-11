@@ -446,4 +446,8 @@ L<Net::Duo::Admin>
 
 L<Duo Admin API for phones|https://www.duosecurity.com/docs/adminapi#phones>
 
+This module is part of the Net::Duo distribution.  The current version of
+Net::Duo is available from CPAN, or directly from its web site at
+L<http://www.eyrie.org/~eagle/software/net-duo/>.
+
 =cut
