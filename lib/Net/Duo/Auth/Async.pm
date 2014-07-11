@@ -89,6 +89,13 @@ Net::Duo::Auth::Async - Representation of an asynchronous Duo authentication
     my $async = $duo->auth_async({ username => 'user', factor => 'auto' });
     say scalar($async->status);
 
+=head1 REQUIREMENTS
+
+Perl 5.14 or later and the modules HTTP::Request and HTTP::Response (part
+of HTTP::Message), JSON, LWP (also known as libwww-perl), Perl6::Slurp,
+Sub::Install, and URI::Escape (part of URI), all of which are available
+from CPAN.
+
 =head1 DESCRIPTION
 
 Net::Duo::Auth::Async represents an open asynchronous authentication

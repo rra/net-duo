@@ -195,6 +195,13 @@ Net::Duo::Admin::User - Representation of a Duo user
     my $user = Net::Duo::Admin::User->new($decoded_json);
     say $user->realname;
 
+=head1 REQUIREMENTS
+
+Perl 5.14 or later and the modules HTTP::Request and HTTP::Response (part
+of HTTP::Message), JSON, LWP (also known as libwww-perl), Perl6::Slurp,
+Sub::Install, and URI::Escape (part of URI), all of which are available
+from CPAN.
+
 =head1 DESCRIPTION
 
 A Net::Duo::Admin::User object is a Perl representation of a Duo user as

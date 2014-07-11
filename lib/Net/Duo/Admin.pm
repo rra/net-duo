@@ -188,8 +188,10 @@ Net::Duo::Admin - Perl interface for the Duo Admin API
 
 =head1 REQUIREMENTS
 
-Perl 5.14 or later and the modules LWP (also known as libwww-perl), JSON,
-Perl6::Slurp, and Sub::Install, all of which are available from CPAN.
+Perl 5.14 or later and the modules HTTP::Request and HTTP::Response (part
+of HTTP::Message), JSON, LWP (also known as libwww-perl), Perl6::Slurp,
+Sub::Install, and URI::Escape (part of URI), all of which are available
+from CPAN.
 
 =head1 DESCRIPTION
 

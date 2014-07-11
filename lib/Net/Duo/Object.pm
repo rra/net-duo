@@ -333,8 +333,10 @@ Net::Duo::Object - Helper base class for Duo objects
 
 =head1 REQUIREMENTS
 
-Perl 5.14 or later and the module Sub::Install, which is available from
-CPAN.
+Perl 5.14 or later and the modules HTTP::Request and HTTP::Response (part
+of HTTP::Message), JSON, LWP (also known as libwww-perl), Perl6::Slurp,
+Sub::Install, and URI::Escape (part of URI), all of which are available
+from CPAN.
 
 =head1 DESCRIPTION
 

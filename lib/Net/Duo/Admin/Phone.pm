@@ -150,6 +150,13 @@ Net::Duo::Admin::Phone - Representation of a Duo phone
     my $phone = Net::Duo::Admin::Phone->new($decoded_json);
     say $phone->number;
 
+=head1 REQUIREMENTS
+
+Perl 5.14 or later and the modules HTTP::Request and HTTP::Response (part
+of HTTP::Message), JSON, LWP (also known as libwww-perl), Perl6::Slurp,
+Sub::Install, and URI::Escape (part of URI), all of which are available
+from CPAN.
+
 =head1 DESCRIPTION
 
 A Net::Duo::Admin::Phone object is a Perl representation of a Duo phone as

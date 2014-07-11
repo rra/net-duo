@@ -266,7 +266,7 @@ Net::Duo::Mock::Agent - Mock LWP::UserAgent for Net::Duo testing
 =head1 REQUIREMENTS
 
 Perl 5.14 or later and the modules HTTP::Request and HTTP::Response (part
-of HTTP::Message), JSON, Perl6::Slurp, and URI::Encode (part of URI), all
+of HTTP::Message), JSON, Perl6::Slurp, and URI::Escape (part of URI), all
 of which are available from CPAN.
 
 =head1 DESCRIPTION

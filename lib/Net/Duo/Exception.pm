@@ -14,6 +14,8 @@ use 5.014;
 use strict;
 use warnings;
 
+use HTTP::Response;
+
 # Enable this object to be treated like a string scalar.
 use overload '""' => \&to_string, 'cmp' => \&spaceship;
 
@@ -208,8 +210,8 @@ Net::Duo::Exception - Rich exception object for Net::Duo failures
 
 =head1 REQUIREMENTS
 
-Perl 5.14 or later and the modules LWP (also known as libwww-perl) and
-JSON, both of which are available from CPAN.
+Perl 5.14 or later and the module HTTP::Message, which is available from
+CPAN.
 
 =head1 DESCRIPTION
 
