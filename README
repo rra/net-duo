@@ -37,6 +37,12 @@ DESCRIPTION
   API, such as the endpoint URLs, that allow for more natural and less
   cluttered Perl code than manipulating the JSON data structures directly.
 
+  The API implementation is currently incomplete and contains just the
+  calls required by Stanford's integration.  Only the Auth and Admin APIs
+  are implemented, and both are partial.  However, the Net::Duo call and
+  call_json methods can be used to make calls to APIs that aren't fully
+  implemented.
+
 REQUIREMENTS
 
   Perl 5.14 or later and Module::Build 0.28 or later are required to build
@@ -44,7 +50,7 @@ REQUIREMENTS
   it:
 
       JSON
-      HTTP::Request (part of HTTP::Message)
+      HTTP::Message
       LWP::UserAgent 6.00 or later (part of libwww-perl)
       Perl6::Slurp
       Sub::Install
@@ -53,7 +59,6 @@ REQUIREMENTS
   The following additional Perl modules will be used by the test suite if
   present:
 
-      IPC::System::Simple
       Test::MinimumVersion
       Test::Perl::Critic
       Test::Pod

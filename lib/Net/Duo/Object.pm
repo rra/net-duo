@@ -17,6 +17,7 @@ use strict;
 use warnings;
 
 use Carp qw(croak);
+use JSON ();
 use Sub::Install;
 
 # Helper function to parse the data for a particular field specification.
@@ -332,8 +333,10 @@ Net::Duo::Object - Helper base class for Duo objects
 
 =head1 REQUIREMENTS
 
-Perl 5.14 or later and the module Sub::Install, which is available from
-CPAN.
+Perl 5.14 or later and the modules HTTP::Request and HTTP::Response (part
+of HTTP::Message), JSON, LWP (also known as libwww-perl), Perl6::Slurp,
+Sub::Install, and URI::Escape (part of URI), all of which are available
+from CPAN.
 
 =head1 DESCRIPTION
 
@@ -501,5 +504,9 @@ DEALINGS IN THE SOFTWARE.
 =head1 SEE ALSO
 
 L<Net::Duo>
+
+This module is part of the Net::Duo distribution.  The current version of
+Net::Duo is available from CPAN, or directly from its web site at
+L<http://www.eyrie.org/~eagle/software/net-duo/>.
 
 =cut

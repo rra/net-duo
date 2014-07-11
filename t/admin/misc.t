@@ -30,9 +30,9 @@ use warnings;
 
 use lib 't/lib';
 
-use JSON;
+use JSON ();
+use Net::Duo::Mock::Agent;
 use Perl6::Slurp;
-use Test::Mock::Duo::Agent;
 use Test::More;
 
 BEGIN {
@@ -47,7 +47,7 @@ my %args = (key_file => 't/data/integrations/admin.json');
 
 # Create the Net::Duo::Auth object with our testing integration configuration
 # and a mock agent.
-my $mock = Test::Mock::Duo::Agent->new(\%args);
+my $mock = Net::Duo::Mock::Agent->new(\%args);
 $args{user_agent} = $mock;
 my $duo = Net::Duo::Admin->new(\%args);
 isa_ok($duo, 'Net::Duo::Admin');

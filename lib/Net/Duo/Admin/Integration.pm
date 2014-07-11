@@ -106,6 +106,13 @@ Net::Duo::Admin::Integration - Representation of a Duo integration
     my $integration = Net::Duo::Admin::Integration->new($decoded_json);
     say $integration->secret_key;
 
+=head1 REQUIREMENTS
+
+Perl 5.14 or later and the modules HTTP::Request and HTTP::Response (part
+of HTTP::Message), JSON, LWP (also known as libwww-perl), Perl6::Slurp,
+Sub::Install, and URI::Escape (part of URI), all of which are available
+from CPAN.
+
 =head1 DESCRIPTION
 
 An integration is Duo's name for the metadata for a system or service that
@@ -436,5 +443,9 @@ DEALINGS IN THE SOFTWARE.
 L<Net::Duo::Admin>
 
 L<Duo Admin API for integrations|https://www.duosecurity.com/docs/adminapi#integrations>
+
+This module is part of the Net::Duo distribution.  The current version of
+Net::Duo is available from CPAN, or directly from its web site at
+L<http://www.eyrie.org/~eagle/software/net-duo/>.
 
 =cut

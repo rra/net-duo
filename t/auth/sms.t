@@ -30,7 +30,7 @@ use warnings;
 
 use lib 't/lib';
 
-use Test::Mock::Duo::Agent;
+use Net::Duo::Mock::Agent;
 use Test::More;
 
 BEGIN {
@@ -42,7 +42,7 @@ my %args = (key_file => 't/data/integrations/auth.json');
 
 # Create the Net::Duo::Auth object with our testing integration configuration
 # and a mock agent.
-my $mock = Test::Mock::Duo::Agent->new(\%args);
+my $mock = Net::Duo::Mock::Agent->new(\%args);
 $args{user_agent} = $mock;
 my $duo = Net::Duo::Auth->new(\%args);
 isa_ok($duo, 'Net::Duo::Auth');

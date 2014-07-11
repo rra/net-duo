@@ -23,13 +23,13 @@ use Net::Duo::Exception;
 sub _fields {
     return {
         user_id    => 'simple',
-        username   => 'simple',
-        realname   => 'simple',
-        email      => 'simple',
-        status     => 'simple',
+        username   => ['simple', 'set'],
+        realname   => ['simple', 'set'],
+        email      => ['simple', 'set'],
+        status     => ['simple', 'set'],
         groups     => 'Net::Duo::Admin::Group',
         last_login => 'simple',
-        notes      => 'simple',
+        notes      => ['simple', 'set'],
         phones     => 'Net::Duo::Admin::Phone',
         tokens     => 'Net::Duo::Admin::Token',
     };
@@ -89,6 +89,42 @@ sub add_token {
     return;
 }
 ## use critic
+
+# Get one or more bypass codes for a user.
+#
+# $self     - The Net::Duo::Admin::User object to modify
+# $data_ref - Data for the bypass code request as a hash reference
+#   count       - The number of codes to generate
+#   codes       - Set this array of codes as bypass codes
+#   reuse_count - The number of times each bypass code can be reused
+#   valid_secs  - Seconds for which these codes are valid
+#
+# Returns: A reference to an array of bypass codes
+#  Throws: Net::Duo::Exception on any problem getting the codes
+sub bypass_codes {
+    my ($self, $data_ref) = @_;
+    my $uri = "/admin/v1/users/$self->{user_id}/bypass_codes";
+
+    # Canonicalize the arguments.
+    my %data = %{$data_ref};
+    if ($data{codes} && ref($data{codes})) {
+        $data{codes} = join(q{,}, @{ $data{codes} });
+    }
+
+    # Make the call and return the results.
+    return $self->{_duo}->call_json('POST', $uri, \%data);
+}
+
+# Commit any changed data and refresh the object from Duo.
+#
+# $self - The Net::Duo::Admin::User object to commit changes for
+#
+# Returns: undef
+#  Throws: Net::Duo::Exception on any problem updating the object
+sub commit {
+    my ($self) = @_;
+    return $self->SUPER::commit("/admin/v1/users/$self->{user_id}");
+}
 
 # Delete the user from Duo.  After this call, the object should be treated as
 # read-only since it can no longer be usefully updated.
@@ -159,6 +195,13 @@ Net::Duo::Admin::User - Representation of a Duo user
     my $user = Net::Duo::Admin::User->new($decoded_json);
     say $user->realname;
 
+=head1 REQUIREMENTS
+
+Perl 5.14 or later and the modules HTTP::Request and HTTP::Response (part
+of HTTP::Message), JSON, LWP (also known as libwww-perl), Perl6::Slurp,
+Sub::Install, and URI::Escape (part of URI), all of which are available
+from CPAN.
+
 =head1 DESCRIPTION
 
 A Net::Duo::Admin::User object is a Perl representation of a Duo user as
@@ -228,6 +271,52 @@ phones associated with this user will be left unchanged.
 Associate the Net::Duo::Admin::Token object TOKEN with this user.  Other
 tokens associated with this user will be left unchanged.
 
+=item bypass_codes(DATA)
+
+Requests bypass codes for the user, returning them as a reference to an
+array.  DATA is a reference to a hash of parameters chosen from the
+following keys, all of which are optional:
+
+=over 4
+
+=item count
+
+The number of bypass codes to request.  At most 10 codes (the default if
+C<codes> is not given) can be created at a time.  If this parameter is
+given, C<codes> may not be given.
+
+=item codes
+
+A reference to an array of codes to set as bypass codes for this user.  If
+this parameter is given, C<count> may not be given.
+
+=item reuse_count
+
+The number of times each code in the list may be reused.  Defaults to 1.
+If set to 0, the codes may be reused indefinitely.
+
+=item valid_secs
+
+The number of seconds for which these codes will be valid.  If set to 0
+(the default), the codes will never expire.
+
+=back
+
+=item commit()
+
+Commit all changes made via the set_*() methods to Duo.  Until this method
+is called, any changes made via set_*() are only internal to the object
+and not reflected in Duo.
+
+After commit(), the internal representation of the object will be
+refreshed to match the new data returned by the Duo API for that object.
+Therefore, other fields of the object may change after commit() if some
+other user has changed other, unrelated fields in the object.
+
+It's best to think of this method as a synchronize operation: changed data
+is written back, overwriting what's in Duo, and unchanged data may be
+overwritten by whatever is currently in Duo, if it is different.
+
 =item delete()
 
 Delete this user from Duo.  After successful completion of this call,
@@ -257,9 +346,15 @@ tokens associated with this user will be left unchanged.
 
 =head1 INSTANCE DATA METHODS
 
+Some fields have set_*() methods.  Those methods replace the value of the
+field in its entirety with the new value passed in.  This change is only
+made locally in the object until commit() is called.
+
 =over 4
 
 =item email()
+
+=item set_email(EMAIL)
 
 The user's email address.
 
@@ -275,6 +370,8 @@ user has not logged in.
 
 =item notes()
 
+=item set_notes(NOTES)
+
 Notes about this user.
 
 =item phones()
@@ -283,9 +380,13 @@ List of phones this user can use, as Net::Duo::Admin::Phone objects.
 
 =item realname()
 
+=item set_realname(NAME)
+
 The user's real name.
 
 =item status()
+
+=item set_status(STATUS)
 
 One of the following values:
 
@@ -320,6 +421,8 @@ List of tokens this user can use, as Net::Duo::Admin::Token objects.
 The unique ID of this user as generated by Duo on user creation.
 
 =item username()
+
+=item set_username(USERNAME)
 
 The username of this user.
 
@@ -357,5 +460,9 @@ DEALINGS IN THE SOFTWARE.
 L<Net::Duo::Admin>
 
 L<Duo Admin API for users|https://www.duosecurity.com/docs/adminapi#users>
+
+This module is part of the Net::Duo distribution.  The current version of
+Net::Duo is available from CPAN, or directly from its web site at
+L<http://www.eyrie.org/~eagle/software/net-duo/>.
 
 =cut

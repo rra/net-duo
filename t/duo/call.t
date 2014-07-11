@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 #
-# Test suite for the basic Auth API.
+# Test suite for the generic Net::Duo call methods.
 #
 # Written by Russ Allbery <rra@cpan.org>
 # Copyright 2014
@@ -28,35 +28,55 @@ use 5.014;
 use strict;
 use warnings;
 
-use lib 't/lib';
-
+use HTTP::Response;
+use JSON ();
 use Net::Duo::Mock::Agent;
 use Test::More;
 
 BEGIN {
-    use_ok('Net::Duo::Auth');
+    use_ok('Net::Duo');
 }
 
-# Arguments for the Net::Duo constructor.
+# Test initialization from a key file and a mock agent.
 my %args = (key_file => 't/data/integrations/auth.json');
-
-# Create the Net::Duo::Auth object with our testing integration configuration
-# and a mock agent.
 my $mock = Net::Duo::Mock::Agent->new(\%args);
 $args{user_agent} = $mock;
-my $duo = Net::Duo::Auth->new(\%args);
-isa_ok($duo, 'Net::Duo::Auth');
+my $duo = Net::Duo->new(\%args);
+isa_ok($duo, 'Net::Duo');
 
-# Verify the check call.
-note('Testing check endpoint');
+# Make a generic call with no parameters.
+my $response = HTTP::Response->new('404', 'Resource not found');
 $mock->expect(
     {
-        method        => 'GET',
-        uri           => '/auth/v2/check',
-        response_data => { time => 1_357_020_061 },
+        method   => 'GET',
+        uri      => '/logo',
+        response => $response,
     }
 );
-is($duo->check, 1_357_020_061, 'Decoded /check response is correct');
+my $result = $duo->call('GET', '/logo');
+is($result, $response, 'call return');
+
+# Make a generic JSON call with some parameters.
+$mock->expect(
+    {
+        method  => 'POST',
+        uri     => '/foo/bar',
+        content => {
+            param => 'one',
+            other => 'two',
+        },
+        response_data => {
+            result => 'foo',
+            extra  => 'bar',
+        },
+    }
+);
+my $args = {
+    param => 'one',
+    other => 'two',
+};
+$result = $duo->call_json('POST', '/foo/bar', $args);
+is_deeply($result, { result => 'foo', extra => 'bar' }, 'call_json return');
 
 # Finished.  Tell Test::More that.
 done_testing();

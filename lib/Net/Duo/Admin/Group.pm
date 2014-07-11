@@ -74,6 +74,13 @@ Net::Duo::Admin::Group - Representation of a Duo group
     my $group = Net::Duo::Admin::Group->new($decoded_json);
     say $group->desc;
 
+=head1 REQUIREMENTS
+
+Perl 5.14 or later and the modules HTTP::Request and HTTP::Response (part
+of HTTP::Message), JSON, LWP (also known as libwww-perl), Perl6::Slurp,
+Sub::Install, and URI::Escape (part of URI), all of which are available
+from CPAN.
+
 =head1 DESCRIPTION
 
 A Net::Duo::Admin::Group object is a Perl representation of a Duo group as
@@ -247,5 +254,9 @@ DEALINGS IN THE SOFTWARE.
 L<Net::Duo::Admin>
 
 L<Duo Admin API for groups|https://www.duosecurity.com/docs/adminapi#groups>
+
+This module is part of the Net::Duo distribution.  The current version of
+Net::Duo is available from CPAN, or directly from its web site at
+L<http://www.eyrie.org/~eagle/software/net-duo/>.
 
 =cut
