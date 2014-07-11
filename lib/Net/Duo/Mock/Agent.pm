@@ -21,7 +21,7 @@ use Encode qw(decode);
 use HTTP::Request;
 use HTTP::Response;
 use JSON;
-use Perl6::Slurp qw(slurp);
+use Perl6::Slurp;
 use Test::More;
 use URI::Escape qw(uri_unescape);
 
