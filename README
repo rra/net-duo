@@ -50,7 +50,7 @@ REQUIREMENTS
   it:
 
       JSON
-      HTTP::Request (part of HTTP::Message)
+      HTTP::Message
       LWP::UserAgent 6.00 or later (part of libwww-perl)
       Perl6::Slurp
       Sub::Install
@@ -59,7 +59,6 @@ REQUIREMENTS
   The following additional Perl modules will be used by the test suite if
   present:
 
-      IPC::System::Simple
       Test::MinimumVersion
       Test::Perl::Critic
       Test::Pod
