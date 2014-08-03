@@ -2,6 +2,6 @@
 
 Net::Duo 1.00 (2014-07-11)
 
-    Initial version.  Supports portions of the Auth and Admin APIs plus a
-    generic JSON call that can be used for any unsupported Duo JSON-based
-    API calls.
+    Initial release with support for generic API calls (both with or
+    without JSON responses) and partial implementations of the Auth and
+    Admin APIs.
