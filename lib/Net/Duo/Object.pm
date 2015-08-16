@@ -288,7 +288,7 @@ sub json {
         my ($type, $flags) = _field_type($fields->{$field});
         if ($type eq 'simple' || $type eq 'array') {
             if ($flags->{boolean}) {
-                $data{$field} = $self->{$field} ? 'true' : 'false';
+                $data{$field} = $self->{$field} ? JSON::true : JSON::false;
             } elsif ($flags->{zero_or_one}) {
                 $data{$field} = $self->{$field} ? 1 : 0;
             } else {
@@ -479,6 +479,8 @@ JSON APIs.
 Russ Allbery <rra@cpan.org>
 
 =head1 COPYRIGHT AND LICENSE
+
+Copyright 2015 Russ Allbery <rra@cpan.org>
 
 Copyright 2014 The Board of Trustees of the Leland Stanford Junior
 University
