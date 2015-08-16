@@ -4,7 +4,7 @@
 # authentication and provides a method to long-poll the status of that
 # authentication attempt.
 
-package Net::Duo::Auth::Async 1.00;
+package Net::Duo::Auth::Async 1.01;
 
 use 5.014;
 use strict;

@@ -10,7 +10,7 @@
 # specialized Perl modules implementing the specific Duo APIs, but it can also
 # be used directly to make generic API calls.
 
-package Net::Duo 1.00;
+package Net::Duo 1.01;
 
 use 5.014;
 use strict;

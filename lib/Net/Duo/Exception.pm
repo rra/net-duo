@@ -8,7 +8,7 @@
 # details, it provides a stringification that is suitable for simple error
 # messages.
 
-package Net::Duo::Exception 1.00;
+package Net::Duo::Exception 1.01;
 
 use 5.014;
 use strict;

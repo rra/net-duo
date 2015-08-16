@@ -3,7 +3,7 @@
 # This class wraps the Duo representation of a single Duo phone, as returned
 # by (for example) the Admin /phones REST endpoint.
 
-package Net::Duo::Admin::Phone 1.00;
+package Net::Duo::Admin::Phone 1.01;
 
 use 5.014;
 use strict;

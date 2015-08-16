@@ -3,7 +3,7 @@
 # This class wraps the Duo representation of a single Duo token, as returned
 # by (for example) the Admin /tokens REST endpoint.
 
-package Net::Duo::Admin::Token 1.00;
+package Net::Duo::Admin::Token 1.01;
 
 use 5.014;
 use strict;

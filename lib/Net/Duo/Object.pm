@@ -10,7 +10,7 @@
 # of constructing an object from decoded JSON data and building the accessors
 # automatically from a field specification.
 
-package Net::Duo::Object 1.00;
+package Net::Duo::Object 1.01;
 
 use 5.014;
 use strict;

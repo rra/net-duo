@@ -7,7 +7,7 @@
 # abstracts some of the API details, and throws rich exceptions rather than
 # requiring the caller deal with JSON data structures directly.
 
-package Net::Duo::Auth 1.00;
+package Net::Duo::Auth 1.01;
 
 use 5.014;
 use strict;
