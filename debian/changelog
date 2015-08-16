@@ -1,4 +1,4 @@
-libnet-duo-perl (1.01-1) UNRELEASED; urgency=medium
+libnet-duo-perl (1.01-1) unstable; urgency=medium
 
   * New upstream release.
     - Fixes FTBFS and JSON decoding with JSON::XS 3.0.  (Closes: #795734)
@@ -8,7 +8,7 @@ libnet-duo-perl (1.01-1) UNRELEASED; urgency=medium
   * Refresh upstream signing key.
   * Update standards version to 3.9.6 (no changes required).
 
- -- Russ Allbery <rra@debian.org>  Sun, 16 Aug 2015 11:49:19 -0700
+ -- Russ Allbery <rra@debian.org>  Sun, 16 Aug 2015 12:01:54 -0700
 
 libnet-duo-perl (1.00-1) unstable; urgency=medium
 
