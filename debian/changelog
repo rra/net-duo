@@ -5,6 +5,7 @@ libnet-duo-perl (1.01-1) UNRELEASED; urgency=medium
   * Prefer *.tar.xz in debian/watch to match packaging.
   * Add debian/gbp.conf reflecting the branch layout of the default
     packaging repository.
+  * Refresh upstream signing key.
 
  -- Russ Allbery <rra@debian.org>  Sun, 16 Aug 2015 11:49:19 -0700
 
