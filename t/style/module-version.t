@@ -65,7 +65,7 @@ sub module_files {
             $File::Find::prune = 1;
             return;
         }
-        if ($_ =~ m{ [.] pm \z }xms) {
+        if (m{ [.] pm \z }xms) {
             push(@files, $File::Find::name);
         }
         return;
