@@ -6,7 +6,7 @@ Build-Depends: debhelper (>= 9), libjson-perl, libmodule-build-perl,
  libtest-pod-perl, libtest-pod-coverage-perl, libtest-strict-perl,
  libtest-synopsis-perl, liburi-perl, libwww-perl
 Maintainer: Russ Allbery <rra@debian.org>
-Standards-Version: 3.9.5
+Standards-Version: 3.9.6
 Homepage: http://www.eyrie.org/~eagle/software/net-duo/
 Vcs-Git: git://git.eyrie.org/perl/net-duo.git -b debian
 Vcs-Browser: http://git.eyrie.org/?p=perl/net-duo.git
