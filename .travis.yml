@@ -7,7 +7,7 @@ perl:
 
 env: AUTHOR_TESTING=1
 before_install:
-  - cpanm HTTP:Message
+  - cpanm HTTP::Message
   - cpanm JSON::PP
   - cpanm LWP::UserAgent
   - cpanm Perl6::Slurp
