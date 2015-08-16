@@ -1,6 +1,6 @@
                       User-Visible Net::Duo Changes
 
-Net::Duo 1.01 (unreleased)
+Net::Duo 1.01 (2015-08-16)
 
     Adjust for an incompatible change in JSON::XS 3.0 that broke magical
     interpretation of the strings "true" and "false" when encoding JSON.
