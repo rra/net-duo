@@ -3,7 +3,7 @@
 # This class wraps the Duo representation of a single Duo integration, as
 # returned by (for example) the Admin /integrations REST endpoint.
 
-package Net::Duo::Admin::Integration 1.00;
+package Net::Duo::Admin::Integration 1.01;
 
 use 5.014;
 use strict;

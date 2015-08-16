@@ -3,7 +3,7 @@
 # This class wraps the Duo representation of a single Duo user, as returned by
 # (for example) the Admin /users REST endpoint.
 
-package Net::Duo::Admin::User 1.00;
+package Net::Duo::Admin::User 1.01;
 
 use 5.014;
 use strict;

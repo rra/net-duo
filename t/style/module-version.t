@@ -9,8 +9,7 @@
 # When given the --update option, instead fixes all of the Perl modules found
 # to have the correct version.
 
-use 5.014;
-use autodie;
+use 5.006;
 use strict;
 use warnings;
 
@@ -19,7 +18,6 @@ use lib 't/lib';
 use Carp qw(croak);
 use File::Find qw(find);
 use Getopt::Long qw(GetOptions);
-use JSON::PP ();
 use Test::More;
 use Test::RRA qw(skip_unless_automated use_prereq);
 
@@ -27,17 +25,20 @@ use Test::RRA qw(skip_unless_automated use_prereq);
 # our prerequisite modules.  Otherwise, check if we have necessary
 # prerequisites and should run as a test suite.
 if (@ARGV) {
+    require JSON::PP;
     require Perl6::Slurp;
+    Perl6::Slurp->import;
 } else {
     skip_unless_automated('Module version tests');
+    use_prereq('JSON::PP');
     use_prereq('Perl6::Slurp');
 }
 
-# A regular expression matching the string for a module.  $1 will contain all
-# of the line contents prior to the actual version string, $2 will contain the
-# version itself, and $3 will contain the rest of the line.  Only supports
-# version declarations via the package keyword (new in Perl 5.12).
-our $REGEX_VERSION = qr{
+# A regular expression matching the version string for a module using the
+# package syntax from Perl 5.12 and later.  $1 will contain all of the line
+# contents prior to the actual version string, $2 will contain the version
+# itself, and $3 will contain the rest of the line.
+our $REGEX_VERSION_PACKAGE = qr{
     (                           # prefix ($1)
         \A \s*                  # whitespace
         package \s+             # package keyword
@@ -49,6 +50,26 @@ our $REGEX_VERSION = qr{
     )
 }xms;
 
+# A regular expression matching a $VERSION string in a module.  $1 will
+# contain all of the line contents prior to the actual version string, $2 will
+# contain the version itself, and $3 will contain the rest of the line.
+our $REGEX_VERSION_OLD = qr{
+    (                           # prefix ($1)
+        \A .*                   # any prefix, such as "our"
+        [\$*]                   # scalar or typeglob
+        [\w\:\']*\b             # optional package name
+        VERSION\b               # version variable
+        \s* = \s*               # assignment
+    )
+    [\"\']?                     # optional leading quote
+    ( v? [\d._]+ )              # the version number itself ($2)
+    [\"\']?                     # optional trailing quote
+    (                           # suffix ($3)
+        \s*
+        ;
+    )
+}xms;
+
 # Find all the Perl modules shipped in this package, if any, and returns the
 # list of file names.
 #
@@ -57,7 +78,7 @@ our $REGEX_VERSION = qr{
 # Returns: List of file names
 sub module_files {
     my ($dir) = @_;
-    $dir //= 'lib';
+    $dir ||= 'lib';
     return if !-d $dir;
     my @files;
     my $wanted = sub {
@@ -65,7 +86,7 @@ sub module_files {
             $File::Find::prune = 1;
             return;
         }
-        if ($_ =~ m{ [.] pm \z }xms) {
+        if (m{ [.] pm \z }xms) {
             push(@files, $File::Find::name);
         }
         return;
@@ -79,18 +100,20 @@ sub module_files {
 # $file - File to check, which should be a Perl module
 #
 # Returns: The version of the module
-#  Throws: autodie exception on I/O failure or inability to find version
+#  Throws: Text exception on I/O failure or inability to find version
 sub module_version {
     my ($file) = @_;
-    open(my $data, q{<}, $file);
+    open(my $data, q{<}, $file) or die "$0: cannot open $file: $!\n";
     while (defined(my $line = <$data>)) {
-        if ($line =~ $REGEX_VERSION) {
+        if (   $line =~ $REGEX_VERSION_PACKAGE
+            || $line =~ $REGEX_VERSION_OLD)
+        {
             my ($prefix, $version, $suffix) = ($1, $2, $3);
-            close($data);
+            close($data) or die "$0: error reading from $file: $!\n";
             return $version;
         }
     }
-    close($data);
+    close($data) or die "$0: error reading from $file: $!\n";
     die "$0: cannot find version number in $file\n";
 }
 
@@ -117,16 +140,25 @@ sub dist_version {
 # $version - The new version number
 #
 # Returns: undef
-#  Throws: Text exception on I/O failure or inability to find the version
+#  Throws: Text exception on I/O failure or inability to find version
 sub update_module_version {
     my ($file, $version) = @_;
-    open(my $in,  q{<}, $file);
-    open(my $out, q{>}, "$file.new");
+    open(my $in, q{<}, $file) or die "$0: cannot open $file: $!\n";
+    open(my $out, q{>}, "$file.new")
+      or die "$0: cannot create $file.new: $!\n";
+
+    # If the version starts with v, use it without quotes.  Otherwise, quote
+    # it to prevent removal of trailing zeroes.
+    if ($version !~ m{ \A v }xms) {
+        $version = "'$version'";
+    }
 
     # Scan for the version and replace it.
   SCAN:
     while (defined(my $line = <$in>)) {
-        if ($line =~ s{ $REGEX_VERSION }{$1$version$3}xms) {
+        if (   $line =~ s{ $REGEX_VERSION_PACKAGE }{$1$version$3}xms
+            || $line =~ s{ $REGEX_VERSION_OLD     }{$1$version$3}xms)
+        {
             print {$out} $line or die "$0: cannot write to $file.new: $!\n";
             last SCAN;
         }
@@ -135,11 +167,12 @@ sub update_module_version {
 
     # Copy the rest of the input file to the output file.
     print {$out} <$in> or die "$0: cannot write to $file.new: $!\n";
-    close($out);
-    close($in);
+    close($out) or die "$0: cannot flush $file.new: $!\n";
+    close($in)  or die "$0: error reading from $file: $!\n";
 
     # All done.  Rename the new file over top of the old file.
-    rename("$file.new", $file);
+    rename("$file.new", $file)
+      or die "$0: cannot rename $file.new to $file: $!\n";
     return;
 }
 
@@ -210,26 +243,28 @@ B<module-version.t> [B<--update>]
 
 =head1 REQUIREMENTS
 
-Perl 5.014 or later and the Perl6::Slurp Perl modules, both of which are
-available from CPAN.
+Perl 5.6.0 or later, the Perl6::Slurp module, and the JSON::PP Perl
+module, both of which are available from CPAN.  JSON::PP is also included
+in Perl core in Perl 5.14 and later.
 
 =head1 DESCRIPTION
 
-This script has a dual purpose as either a test script or a utility script.
-The intent is to assist with maintaining consistent versions in a Perl
-distribution that uses the Perl 5.12 (and later) package keyword syntax that
-specifies the module version.
+This script has a dual purpose as either a test script or a utility
+script.  The intent is to assist with maintaining consistent versions in a
+Perl distribution, supporting both the package keyword syntax introduced
+in Perl 5.12 or the older explicit setting of a $VERSION variable.
 
-As a test, it reads the current version of a package from the F<MYMETA.json>
-file in the current directory (which should be the root of the distribution)
-and then looks for any Perl modules in F<lib>.  If it finds any, it checks
-that the version number of the Perl module matches the version number of the
-package from the F<MYMETA.json> file.  These test results are reported with
-Test::More, suitable for any TAP harness.
+As a test, it reads the current version of a package from the
+F<MYMETA.json> file in the current directory (which should be the root of
+the distribution) and then looks for any Perl modules in F<lib>.  If it
+finds any, it checks that the version number of the Perl module matches
+the version number of the package from the F<MYMETA.json> file.  These
+test results are reported with Test::More, suitable for any TAP harness.
 
-As a utility script, when run with the B<--update> option, it similarly finds
-all Perl modules in F<lib> and then rewrites their version setting to match
-the version of the package as determined from the F<MYMETA.json> file.
+As a utility script, when run with the B<--update> option, it similarly
+finds all Perl modules in F<lib> and then rewrites their version setting
+to match the version of the package as determined from the F<MYMETA.json>
+file.
 
 =head1 OPTIONS
 
@@ -252,6 +287,8 @@ Russ Allbery <eagle@eyrie.org>
 Copyright 2013, 2014 The Board of Trustees of the Leland Stanford Junior
 University
 
+Copyright 2014 Russ Allbery <eagle@eyrie.org>
+
 Permission is hereby granted, free of charge, to any person obtaining a
 copy of this software and associated documentation files (the "Software"),
 to deal in the Software without restriction, including without limitation
@@ -269,5 +306,10 @@ THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
 FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 DEALINGS IN THE SOFTWARE.
+
+=head1 SEE ALSO
+
+This module is maintained in the rra-c-util package.  The current version
+is available from L<http://www.eyrie.org/~eagle/software/rra-c-util/>.
 
 =cut

@@ -35,7 +35,7 @@ my $build = Module::Build->new(
     module_name          => 'Net::Duo',
     dist_abstract        => 'API for Duo multifactor authentication service',
     dist_author          => 'Russ Allbery <rra@cpan.org>',
-    dist_version         => '1.00',
+    dist_version         => '1.01',
     license              => 'mit',
     recursive_test_files => 1,
 

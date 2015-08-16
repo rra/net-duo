@@ -9,7 +9,7 @@
 # predictable number of test results.  This means that any calling test
 # program should probably not specify a plan and instead use done_testing().
 
-package Net::Duo::Mock::Agent 1.00;
+package Net::Duo::Mock::Agent 1.01;
 
 use 5.014;
 use strict;
