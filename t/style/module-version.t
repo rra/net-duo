@@ -28,6 +28,7 @@ use Test::RRA qw(skip_unless_automated use_prereq);
 # prerequisites and should run as a test suite.
 if (@ARGV) {
     require Perl6::Slurp;
+    Perl6::Slurp->import;
 } else {
     skip_unless_automated('Module version tests');
     use_prereq('Perl6::Slurp');
