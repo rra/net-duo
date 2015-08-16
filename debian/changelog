@@ -1,3 +1,10 @@
+libnet-duo-perl (1.01-1) UNRELEASED; urgency=medium
+
+  * New upstream release.
+    - Fixes FTBFS and JSON decoding with JSON::XS 3.0.  (Closes: #795734)
+
+ -- Russ Allbery <rra@debian.org>  Sun, 16 Aug 2015 11:49:19 -0700
+
 libnet-duo-perl (1.00-1) unstable; urgency=medium
 
   * Initial release.  (Closes: #754503)
