@@ -11,6 +11,8 @@ License: Expat
 Files: *
 Copyright: 2011-2014
     The Board of Trustees of the Leland Stanford Junior University
+  2014 Russ Allbery <eagle@eyrie.org>
+  2015 Russ Allbery <rra@cpan.org>
 License: Expat
  Permission is hereby granted, free of charge, to any person obtaining a
  copy of this software and associated documentation files (the
