@@ -1,10 +1,10 @@
 # Perl interface for the Duo multifactor authentication service.
 #
 # This Perl module collection provides a Perl interface to the Duo multifactor
-# authentication service (https://www.duosecurity.com/).  It differs from the
-# Perl API sample code in that it abstracts some of the API details and throws
-# rich exceptions rather than requiring the caller deal with JSON data
-# structures directly.
+# authentication service (https://www.duo.com/).  It differs from the Perl API
+# sample code in that it abstracts some of the API details and throws rich
+# exceptions rather than requiring the caller deal with JSON data structures
+# directly.
 #
 # This module is intended primarily for use as a base class for more
 # specialized Perl modules implementing the specific Duo APIs, but it can also
@@ -429,11 +429,9 @@ DEALINGS IN THE SOFTWARE.
 
 =head1 SEE ALSO
 
-L<Duo Auth API|https://www.duosecurity.com/docs/authapi>
+L<Duo Auth API|https://www.duo.com/docs/authapi>
 
-L<Duo Verify API|https://www.duosecurity.com/docs/duoverify>
-
-L<Duo Admin API|https://www.duosecurity.com/docs/adminapi>
+L<Duo Admin API|https://www.duo.com/docs/adminapi>
 
 This module is part of the Net::Duo distribution.  The current version of
 Net::Duo is available from CPAN, or directly from its web site at

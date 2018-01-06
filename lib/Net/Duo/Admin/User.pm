@@ -459,7 +459,7 @@ DEALINGS IN THE SOFTWARE.
 
 L<Net::Duo::Admin>
 
-L<Duo Admin API for users|https://www.duosecurity.com/docs/adminapi#users>
+L<Duo Admin API for users|https://www.duo.com/docs/adminapi#users>
 
 This module is part of the Net::Duo distribution.  The current version of
 Net::Duo is available from CPAN, or directly from its web site at

@@ -253,7 +253,7 @@ DEALINGS IN THE SOFTWARE.
 
 L<Net::Duo::Admin>
 
-L<Duo Admin API for groups|https://www.duosecurity.com/docs/adminapi#groups>
+L<Duo Admin API for groups|https://www.duo.com/docs/adminapi#groups>
 
 This module is part of the Net::Duo distribution.  The current version of
 Net::Duo is available from CPAN, or directly from its web site at

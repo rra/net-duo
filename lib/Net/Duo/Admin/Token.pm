@@ -251,7 +251,7 @@ DEALINGS IN THE SOFTWARE.
 
 L<Net::Duo::Admin>
 
-L<Duo Admin API for tokens|https://www.duosecurity.com/docs/adminapi#tokens>
+L<Duo Admin API for tokens|https://www.duo.com/docs/adminapi#tokens>
 
 This module is part of the Net::Duo distribution.  The current version of
 Net::Duo is available from CPAN, or directly from its web site at
