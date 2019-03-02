@@ -13,6 +13,12 @@ Net::Duo 1.02 (unreleased)
     duosecurity.com, following upstream redirects.  Remove the reference
     to the Verify API, which no longer appears to be a separate API.
 
+    Update to rra-c-util 8.0:
+
+    * Add SPDX-License-Identifier information to imported files.
+    * Fix some formatting issues with latest perltidy.
+    * Exclude more files from strictness checks.
+
 Net::Duo 1.01 (2015-08-16)
 
     Adjust for an incompatible change in JSON::XS 3.0 that broke magical
