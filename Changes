@@ -2,6 +2,13 @@
 
 Net::Duo 1.02 (unreleased)
 
+    Add basic support for paginated queries via a new call_json_paged()
+    method in Net::Duo.  Enable that support for the users() and
+    integrations() methods in Net::Duo::Admin in advance of the March 15,
+    2019 deadline for the Duo API change requiring paginated calls.  This
+    support makes repeated calls until all objects have been returned and
+    doesn't expose the pagination to the caller.
+
     Change documentation URLs to point to duo.com instead of
     duosecurity.com, following upstream redirects.  Remove the reference
     to the Verify API, which no longer appears to be a separate API.

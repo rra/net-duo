@@ -32,7 +32,7 @@ sub integrations {
     my ($self) = @_;
 
     # Make the Duo call and get the decoded result.
-    my $result = $self->call_json('GET', '/admin/v1/integrations');
+    my $result = $self->call_json_paged('GET', '/admin/v1/integrations');
 
     # Convert the returned integrations into Net::Duo::Admin::Integration
     # objects.
@@ -135,7 +135,7 @@ sub user {
     my ($self, $username) = @_;
 
     # Make the Duo call and get the decoded result.
-    my $args = { username => $username };
+    my $args   = { username => $username };
     my $result = $self->call_json('GET', '/admin/v1/users', $args);
 
     # Convert the returned user into a Net::Duo::Admin::User object.
@@ -159,8 +159,8 @@ sub users {
     my ($self, $username) = @_;
 
     # Make the Duo call and get the decoded result.
-    my $args = $username ? { username => $username } : undef;
-    my $result = $self->call_json('GET', '/admin/v1/users', $args);
+    my $args   = $username ? { username => $username } : undef;
+    my $result = $self->call_json_paged('GET', '/admin/v1/users', $args);
 
     # Convert the returned users into Net::Duo::Admin::User objects.
     my @users;
@@ -385,6 +385,8 @@ Russ Allbery <rra@cpan.org>
 
 Copyright 2014 The Board of Trustees of the Leland Stanford Junior
 University
+
+Copyright 2019 Russ Allbery <rra@cpan.org>
 
 Permission is hereby granted, free of charge, to any person obtaining a
 copy of this software and associated documentation files (the "Software"),

@@ -1,4 +1,5 @@
 .gitignore
+.travis.yml
 Build.PL
 Changes
 lib/Net/Duo.pm
@@ -33,7 +34,8 @@ t/data/perlcriticrc
 t/data/perltidyrc
 t/data/responses/group-create.json
 t/data/responses/integration.json
-t/data/responses/integrations.json
+t/data/responses/integrations-1.json
+t/data/responses/integrations-2.json
 t/data/responses/log-admin.json
 t/data/responses/log-auth.json
 t/data/responses/log-telephony.json
@@ -41,7 +43,8 @@ t/data/responses/phone-create.json
 t/data/responses/token-create.json
 t/data/responses/user-create.json
 t/data/responses/user.json
-t/data/responses/users.json
+t/data/responses/users-1.json
+t/data/responses/users-2.json
 t/docs/pod-coverage.t
 t/docs/pod-spelling.t
 t/docs/pod.t
