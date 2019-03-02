@@ -59,7 +59,7 @@ $mock->expect(
     {
         method        => 'GET',
         uri           => '/admin/v1/users',
-        content       => { limit => 300, offset => 0 },
+        content       => { limit => 500, offset => 0 },
         response_file => 't/data/responses/users-1.json',
         next_offset   => 1,
         total_objects => 2,
@@ -69,7 +69,7 @@ $mock->expect(
     {
         method        => 'GET',
         uri           => '/admin/v1/users',
-        content       => { limit => 300, offset => 1 },
+        content       => { limit => 500, offset => 1 },
         response_file => 't/data/responses/users-2.json',
         next_offset   => undef,
         total_objects => 2,

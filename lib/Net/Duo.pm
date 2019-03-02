@@ -292,7 +292,7 @@ sub call_json_paged {
     while ($more_data) {
         my $call_args_ref = $args_ref ? { %{$args_ref} } : {};
         $call_args_ref->{offset} = $offset;
-        $call_args_ref->{limit}  = 300;
+        $call_args_ref->{limit}  = 500;
         my $data = $self->_call_json_internal($method, $path, $call_args_ref);
 
         # For paginated data, the response must be a list.
@@ -463,7 +463,7 @@ return JSON, such as the Auth API C</logo> endpoint.
 The same as call_json(), except for endpoints that require pagination.
 This will make repeated calls to call_json() with increasing offsets until
 it has retrieved all of the objects, and then return them all as a single
-response.  It always uses a C<limit> setting of 300.
+response.  It always uses a C<limit> setting of 500.
 
 =back
 
