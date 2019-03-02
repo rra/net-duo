@@ -7,6 +7,8 @@
 # recover additional information.  If the caller doesn't care about the
 # details, it provides a stringification that is suitable for simple error
 # messages.
+#
+# SPDX-License-Identifier: MIT
 
 package Net::Duo::Exception 1.01;
 
@@ -349,3 +351,7 @@ Net::Duo is available from CPAN, or directly from its web site at
 L<http://www.eyrie.org/~eagle/software/net-duo/>.
 
 =cut
+
+# Local Variables:
+# copyright-at-end-flag: t
+# End:

@@ -9,6 +9,8 @@
 # This module is intended primarily for use as a base class for more
 # specialized Perl modules implementing the specific Duo APIs, but it can also
 # be used directly to make generic API calls.
+#
+# SPDX-License-Identifier: MIT
 
 package Net::Duo 1.01;
 
@@ -507,3 +509,7 @@ Net::Duo is available from CPAN, or directly from its web site at
 L<http://www.eyrie.org/~eagle/software/net-duo/>.
 
 =cut
+
+# Local Variables:
+# copyright-at-end-flag: t
+# End:

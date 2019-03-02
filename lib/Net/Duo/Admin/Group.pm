@@ -2,6 +2,8 @@
 #
 # This class wraps the Duo representation of a single Duo group, as returned
 # by (for example) the Admin /groups REST endpoint.
+#
+# SPDX-License-Identifier: MIT
 
 package Net::Duo::Admin::Group 1.01;
 
@@ -260,3 +262,7 @@ Net::Duo is available from CPAN, or directly from its web site at
 L<http://www.eyrie.org/~eagle/software/net-duo/>.
 
 =cut
+
+# Local Variables:
+# copyright-at-end-flag: t
+# End:
