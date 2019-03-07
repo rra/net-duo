@@ -3,8 +3,10 @@
 Build.PL
 Changes
 docs/metadata/blurb
+docs/metadata/debian/summary
 docs/metadata/description
 docs/metadata/metadata.json
+docs/metadata/orphaned
 docs/metadata/requirements
 docs/metadata/test/suffix
 lib/Net/Duo.pm

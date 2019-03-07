@@ -10,7 +10,7 @@
 #
 # SPDX-License-Identifier: MIT
 
-package Net::Duo::Exception 1.01;
+package Net::Duo::Exception 1.02;
 
 use 5.014;
 use strict;

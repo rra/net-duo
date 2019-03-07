@@ -5,7 +5,7 @@
 #
 # SPDX-License-Identifier: MIT
 
-package Net::Duo::Admin::Group 1.01;
+package Net::Duo::Admin::Group 1.02;
 
 use 5.014;
 use strict;

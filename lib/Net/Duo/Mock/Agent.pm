@@ -11,7 +11,7 @@
 #
 # SPDX-License-Identifier: MIT
 
-package Net::Duo::Mock::Agent 1.01;
+package Net::Duo::Mock::Agent 1.02;
 
 use 5.014;
 use strict;

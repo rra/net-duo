@@ -1,6 +1,6 @@
                       User-Visible Net::Duo Changes
 
-Net::Duo 1.02 (unreleased)
+Net::Duo 1.02 (2019-03-06)
 
     Add basic support for paginated queries via a new call_json_paged()
     method in Net::Duo.  Enable that support for the users() and
