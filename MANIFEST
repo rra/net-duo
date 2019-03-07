@@ -2,6 +2,11 @@
 .travis.yml
 Build.PL
 Changes
+docs/metadata/blurb
+docs/metadata/description
+docs/metadata/metadata.json
+docs/metadata/requirements
+docs/metadata/test/suffix
 lib/Net/Duo.pm
 lib/Net/Duo/Admin.pm
 lib/Net/Duo/Admin/Group.pm
@@ -18,6 +23,7 @@ LICENSE
 MANIFEST			This list of files
 MANIFEST.SKIP
 README
+README.md
 t/admin/groups.t
 t/admin/integrations.t
 t/admin/misc.t
@@ -48,14 +54,17 @@ t/data/responses/users-2.json
 t/docs/pod-coverage.t
 t/docs/pod-spelling.t
 t/docs/pod.t
+t/docs/spdx-license.t
 t/docs/synopsis.t
 t/duo/call.t
 t/duo/exception.t
 t/lib/Test/RRA.pm
 t/lib/Test/RRA/Config.pm
 t/lib/Test/RRA/Duo.pm
+t/lib/Test/RRA/ModuleVersion.pm
 t/style/critic.t
 t/style/minimum-version.t
 t/style/module-version.t
+t/style/obsolete-strings.t
 t/style/strict.t
 TODO
