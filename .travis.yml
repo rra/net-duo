@@ -1,5 +1,6 @@
 language: perl
 perl:
+  - "5.30"
   - "5.28"
   - "5.26"
   - "5.24"
@@ -12,21 +13,26 @@ perl:
 # Only run the exhaustive tests with heavy dependencies on the latest Perl
 # version.  (These conditionals are written weirdly backwards so that the
 # command line evaluates to true.)
+#
+# Don't fail the test if Test::MinimumVersion or Test::Perl::Critic cannot
+# be installed, since this seems to fail very regularly on Travis-CI.
 
 env: AUTHOR_TESTING=1
 before_install:
   - cpanm HTTP::Message
   - cpanm JSON::PP
   - cpanm LWP::UserAgent
+  - cpanm Module::Build
   - cpanm Perl6::Slurp
   - cpanm Sub::Install
   - cpanm URI::Escape
-  - test "$TRAVIS_PERL_VERSION" != "5.28" || cpanm Test::MinimumVersion
-  - test "$TRAVIS_PERL_VERSION" != "5.28" || cpanm Test::Perl::Critic
-  - test "$TRAVIS_PERL_VERSION" != "5.28" || cpanm Test::Pod
-  - test "$TRAVIS_PERL_VERSION" != "5.28" || cpanm Test::Pod::Coverage
-  - test "$TRAVIS_PERL_VERSION" != "5.28" || cpanm Test::Strict
-  - test "$TRAVIS_PERL_VERSION" != "5.28" || cpanm Test::Synopsis
+  - test "$TRAVIS_PERL_VERSION" != "5.30" || cpanm Perl::Critic         || true
+  - test "$TRAVIS_PERL_VERSION" != "5.30" || cpanm Test::MinimumVersion || true
+  - test "$TRAVIS_PERL_VERSION" != "5.30" || cpanm Test::Perl::Critic   || true
+  - test "$TRAVIS_PERL_VERSION" != "5.30" || cpanm Test::Pod
+  - test "$TRAVIS_PERL_VERSION" != "5.30" || cpanm Test::Pod::Coverage
+  - test "$TRAVIS_PERL_VERSION" != "5.30" || cpanm Test::Strict
+  - test "$TRAVIS_PERL_VERSION" != "5.30" || cpanm Test::Synopsis
 
 branches:
   except:
