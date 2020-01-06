@@ -71,8 +71,8 @@ BEGIN {
 #
 # Returns: undef
 sub _check_array {
-    my ($args_ref) = @_;
-    my @seen = @{ $args_ref->{seen} };
+    my ($args_ref)  = @_;
+    my @seen        = @{ $args_ref->{seen} };
     my @expected    = $args_ref->{expected} ? @{ $args_ref->{expected} } : ();
     my $compare_ref = $args_ref->{compare};
     my $prefix      = $args_ref->{prefix};
