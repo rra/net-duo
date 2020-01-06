@@ -1,5 +1,7 @@
 # Net::Duo 1.02
 
+[![No maintenance
+intended](http://unmaintained.tech/badge.svg)](http://unmaintained.tech/)
 [![Build
 status](https://travis-ci.org/rra/net-duo.svg?branch=master)](https://travis-ci.org/rra/net-duo)
 [![CPAN
