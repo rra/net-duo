@@ -52,9 +52,6 @@ allow = unless
 # This is handled with a separate test case that uses Test::Spelling.
 [-Documentation::PodSpelling]
 
-# Pod::Man and Pod::Text fixed this bug years ago.  I know, I maintain them.
-[-Documentation::RequirePodLinksIncludeText]
-
 # The POD sections Perl::Critic wants are incompatible with the POD template
 # from perlpodstyle, which is what I use for my POD documentation.
 [-Documentation::RequirePodSections]
